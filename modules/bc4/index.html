@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Seven.AM – Bảng xếp hạng bán túi toàn hệ thống</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <div class="brand">
+      <div class="eyebrow">SEVEN.AM INTERNAL TOOL</div>
+      <h1>BXH Bán Túi Toàn Hệ Thống</h1>
+      <p>16 showroom cố định • tự tính KPI tháng • trạng thái theo tiến độ thời gian • xuất PNG.</p>
+    </div>
+
+    <section class="card">
+      <h2>1. Dán dữ liệu</h2>
+      <p class="help">Chỉ cần có SR, TỔNG và TG Tháng. Các cột Còn thiếu / % Hoàn thành có thể có hoặc không; tool tự tính lại.</p>
+      <textarea id="dataInput" spellcheck="false"></textarea>
+      <div class="actions">
+        <button id="parseBtn" class="btn primary">Phân tích & tạo Dashboard</button>
+        <button id="sampleBtn" class="btn secondary">Dữ liệu mẫu</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Ngày cập nhật báo cáo</h2>
+      <label for="closingDate">Ngày cập nhật</label>
+      <input id="closingDate" type="date">
+      <p class="help">Mặc định tự lấy ngày trên máy lúc làm báo cáo. Số liệu được hiểu là chốt hết ngày hôm trước. Ví dụ cập nhật 17/08 → chốt hết 16/08. Có thể chọn ngày cập nhật thủ công; tool tự tính số ngày trong tháng theo dương lịch.</p>
+    </section>
+
+    <section class="card export-card">
+      <h2>3. Xuất ảnh</h2>
+      <div class="export-grid">
+        <button id="export2k" class="btn export" disabled><strong>PNG 2X</strong><small>3072 × 2048 px</small></button>
+        <button id="export4k" class="btn export blue" disabled><strong>PNG 3X</strong><small>4608 × 3072 px</small></button>
+      </div>
+      <p class="help center">Render trực tiếp từ Canvas, không chụp màn hình.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Kiểm tra dữ liệu</h2>
+      <div id="validation" class="validation"></div>
+    </section>
+
+    <section class="card rules">
+      <h2>Quy ước trạng thái</h2>
+      <div><span class="dot green"></span><b>Vượt nhiều:</b> &gt; +10 điểm % so với tiến độ TG</div>
+      <div><span class="dot blue"></span><b>Kịp:</b> 0 đến +10 điểm %</div>
+      <div><span class="dot orange"></span><b>Chậm:</b> −10 đến &lt; 0 điểm %</div>
+      <div><span class="dot red"></span><b>Chậm nhiều:</b> &lt; −10 điểm %</div>
+      <div><span class="dot gray"></span><b>Chưa phát sinh:</b> thực đạt = 0</div>
+    </section>
+
+    <div class="foot">Dùng nội bộ • dữ liệu chỉ nằm trên trình duyệt</div>
+  </aside>
+
+  <main class="preview">
+    <div class="topbar">
+      <div><b>Dashboard Preview</b><span>1536 × 1024 logic • tỷ lệ 3:2</span></div>
+      <div id="meta"></div>
+    </div>
+    <div id="scroll" class="scroll">
+      <div id="canvasWrap" class="canvas-wrap">
+        <canvas id="canvas" width="1536" height="1024"></canvas>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><div id="modalBadge" class="badge">CẦN KIỂM TRA</div><h3 id="modalTitle">Kiểm tra dữ liệu</h3></div>
+      <button id="modalClose" class="close">×</button>
+    </div>
+    <div id="modalSummary" class="modal-summary"></div>
+    <div id="modalIssues" class="modal-issues"></div>
+    <button id="modalOk" class="btn primary full">Đã hiểu</button>
+  </div>
+</div>
+
+<script src="app.js?v=tui-canvas-v6-detail-tune"></script>
+</body>
+</html>
