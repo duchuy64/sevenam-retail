@@ -42,90 +42,74 @@
 
     insight_trend:
       'data:image/svg+xml;utf8,' +
-      encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="27" fill="#ECF8E8"/>
-          <path
-            d="M15 43l13-13 9 8 13-15"
+          <path d="M15 43l13-13 9 8 13-15"
             fill="none"
             stroke="#2F8F1F"
             stroke-width="6"
             stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M40 23h10v10"
+            stroke-linejoin="round"/>
+          <path d="M40 23h10v10"
             fill="none"
             stroke="#2F8F1F"
             stroke-width="6"
             stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      `),
+            stroke-linejoin="round"/>
+        </svg>`
+      ),
 
     insight_check:
       'data:image/svg+xml;utf8,' +
-      encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="27" fill="#E8F4FC"/>
-          <circle
-            cx="32"
-            cy="32"
-            r="18"
+          <circle cx="32" cy="32" r="18"
             fill="none"
             stroke="#188BD8"
-            stroke-width="6"
-          />
-          <path
-            d="M22 32l7 7 14-16"
+            stroke-width="6"/>
+          <path d="M22 32l7 7 14-16"
             fill="none"
             stroke="#188BD8"
             stroke-width="6"
             stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      `),
+            stroke-linejoin="round"/>
+        </svg>`
+      ),
 
     insight_pace:
       'data:image/svg+xml;utf8,' +
-      encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="27" fill="#FFF3D9"/>
-          <path
-            d="M15 43a20 20 0 1 1 34 0"
+          <path d="M15 43a20 20 0 1 1 34 0"
             fill="none"
             stroke="#F5A000"
             stroke-width="6"
-            stroke-linecap="round"
-          />
-          <path
-            d="M32 35l11-12"
+            stroke-linecap="round"/>
+          <path d="M32 35l11-12"
             fill="none"
             stroke="#D98500"
             stroke-width="6"
-            stroke-linecap="round"
-          />
+            stroke-linecap="round"/>
           <circle cx="32" cy="35" r="4.5" fill="#D98500"/>
-        </svg>
-      `),
+        </svg>`
+      ),
 
     insight_warning:
       'data:image/svg+xml;utf8,' +
-      encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="27" fill="#FDEBEC"/>
           <path d="M32 13L53 50H11L32 13z" fill="#EE3737"/>
-          <path
-            d="M32 25v12"
+          <path d="M32 25v12"
             stroke="#fff"
             stroke-width="6"
-            stroke-linecap="round"
-          />
+            stroke-linecap="round"/>
           <circle cx="32" cy="44" r="3.5" fill="#fff"/>
-        </svg>
-      `)
+        </svg>`
+      )
   };
 
 
@@ -353,28 +337,30 @@
 
 
   function fmt0(v){
-    return Math.round(Number(v) || 0)
-      .toLocaleString('vi-VN');
+    return Math.round(
+      Number(v) || 0
+    ).toLocaleString('vi-VN');
   }
 
 
   function fmtWhole(v){
-    return Math.trunc(Number(v) || 0)
-      .toLocaleString('vi-VN');
+    return Math.trunc(
+      Number(v) || 0
+    ).toLocaleString('vi-VN');
   }
 
 
   function fmtNum(v){
     const n = Number(v) || 0;
 
-    return Math.abs(n - Math.round(n)) < 0.05
+    return Math.abs(
+      n-Math.round(n)
+    ) < 0.05
       ? fmt0(n)
       : fmt1(n);
   }
 
 
-  // Có thể truyền số chữ số sau dấu phẩy.
-  // Ví dụ fmtPct(41.26,1) => 41,3%
   function fmtPct(v,d=0){
     return (Number(v) || 0)
       .toLocaleString(
@@ -388,39 +374,43 @@
 
 
   function fmtPoint(v){
-    const n = Math.abs(Number(v) || 0)
-      .toLocaleString(
-        'vi-VN',
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      );
+    const n = Math.abs(
+      Number(v) || 0
+    ).toLocaleString(
+      'vi-VN',
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
 
-    return `${v >= 0 ? '+' : '−'}${n}`;
+    return `${v>=0?'+':'−'}${n}`;
   }
 
 
   function fmtStatusDelta(v){
-    const n = Math.abs(Number(v) || 0)
-      .toLocaleString(
-        'vi-VN',
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      );
+    const n = Math.abs(
+      Number(v) || 0
+    ).toLocaleString(
+      'vi-VN',
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
 
-    return `${v >= 0 ? '+' : '-'}${n}%`;
+    return `${v>=0?'+':'-'}${n}%`;
   }
 
 
   function fmtSignedWhole(v){
     const n = Math.abs(
-      Math.trunc(Number(v) || 0)
+      Math.trunc(
+        Number(v) || 0
+      )
     ).toLocaleString('vi-VN');
 
-    return `${Number(v) >= 0 ? '+' : '-'}${n}`;
+    return `${Number(v)>=0?'+':'-'}${n}`;
   }
 
 
@@ -439,7 +429,9 @@
 
   function parseDateVN(s){
     const m = String(s || '')
-      .match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+      .match(
+        /(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/
+      );
 
     if(!m) return null;
 
@@ -447,9 +439,15 @@
     const mo = +m[2];
     const y = +m[3];
 
-    const dt = new Date(y,mo-1,d);
+    const dt = new Date(
+      y,
+      mo-1,
+      d
+    );
 
-    return Number.isNaN(dt.getTime())
+    return Number.isNaN(
+      dt.getTime()
+    )
       ? null
       : dt;
   }
@@ -466,7 +464,11 @@
 
 
   function daysInMonth(y,m){
-    return new Date(y,m,0).getDate();
+    return new Date(
+      y,
+      m,
+      0
+    ).getDate();
   }
 
 
@@ -480,27 +482,37 @@
 
   function shadeHex(hex,factor=.62){
     const m = String(hex)
-      .match(/^#([0-9a-f]{6})$/i);
+      .match(
+        /^#([0-9a-f]{6})$/i
+      );
 
     if(!m) return hex;
 
-    const n = parseInt(m[1],16);
+    const n = parseInt(
+      m[1],
+      16
+    );
 
     const r = Math.round(
-      ((n >> 16) & 255) * factor
+      ((n>>16)&255)*factor
     );
 
     const g = Math.round(
-      ((n >> 8) & 255) * factor
+      ((n>>8)&255)*factor
     );
 
     const b = Math.round(
-      (n & 255) * factor
+      (n&255)*factor
     );
 
     return '#' +
       [r,g,b]
-        .map(v => v.toString(16).padStart(2,'0'))
+        .map(
+          v =>
+            v
+              .toString(16)
+              .padStart(2,'0')
+        )
         .join('');
   }
 
@@ -508,21 +520,27 @@
   function median(a){
     const x = a
       .filter(Number.isFinite)
-      .sort((p,q) => p-q);
+      .sort((p,q)=>p-q);
 
-    if(!x.length) return NaN;
+    if(!x.length){
+      return NaN;
+    }
 
-    const m = Math.floor(x.length / 2);
+    const m = Math.floor(
+      x.length/2
+    );
 
-    return x.length % 2
+    return x.length%2
       ? x[m]
-      : (x[m-1] + x[m]) / 2;
+      : (x[m-1]+x[m])/2;
   }
 
 
   function sum(a,fn){
     return a.reduce(
-      (s,x) => s + (Number(fn(x)) || 0),
+      (s,x) =>
+        s +
+        (Number(fn(x)) || 0),
       0
     );
   }
@@ -538,7 +556,6 @@
 
 
   function splitLine(line){
-
     if(line.includes('\t')){
       return line
         .split('\t')
@@ -577,17 +594,23 @@
     return (
       cells.length > 1 &&
       cells.every(
-        c => !c || /^:?-{3,}:?$/.test(c)
+        c =>
+          !c ||
+          /^:?-{3,}:?$/.test(c)
       )
     );
   }
 
 
   function findHeader(lines){
-
-    for(let i=0;i<lines.length;i++){
-
-      const cells = splitLine(lines[i]);
+    for(
+      let i=0;
+      i<lines.length;
+      i++
+    ){
+      const cells = splitLine(
+        lines[i]
+      );
 
       const n = cells
         .map(normHeader)
@@ -615,12 +638,10 @@
 
 
   function columnMap(headers){
-
     const map = {};
 
     headers.forEach(
       (h,i) => {
-
         const n = normHeader(h);
 
         if(
@@ -679,7 +700,6 @@
       }
     );
 
-
     if(
       map.sr == null ||
       map.target == null ||
@@ -696,9 +716,10 @@
 
 
   function detectTargetMonth(header){
-
     const m = normHeader(header)
-      .match(/tg\s*t(\d{1,2})/);
+      .match(
+        /tg\s*t(\d{1,2})/
+      );
 
     return m
       ? clamp(+m[1],1,12)
@@ -707,7 +728,6 @@
 
 
   function storeDisplay(code){
-
     const n = stripAccents(code);
 
     return STORE_NAMES[n] ||
@@ -716,12 +736,12 @@
 
 
   function parsePastedData(text){
-
     const rawLines = String(text || '')
       .replace(/\r/g,'')
       .split('\n')
-      .filter(l => l.trim());
-
+      .filter(
+        l => l.trim()
+      );
 
     if(!rawLines.length){
       throw new Error(
@@ -730,27 +750,36 @@
     }
 
 
-    const found = findHeader(rawLines);
+    const found = findHeader(
+      rawLines
+    );
 
     const headerIndex = found.i;
 
-    let headers = [...found.cells];
+    let headers = [
+      ...found.cells
+    ];
 
 
     if(
       headers.length > 1 &&
       !normHeader(headers[0]) &&
-      normHeader(headers[1]).includes('stt')
+      normHeader(headers[1])
+        .includes('stt')
     ){
       headers.shift();
     }
 
 
-    const col = columnMap(headers);
-
-    const targetMonth = detectTargetMonth(
-      headers[col.target]
+    const col = columnMap(
+      headers
     );
+
+
+    const targetMonth =
+      detectTargetMonth(
+        headers[col.target]
+      );
 
 
     const issues = [];
@@ -765,18 +794,21 @@
       i<rawLines.length;
       i++
     ){
-
       const cells = splitLine(
         rawLines[i]
       );
 
-
-      if(isSeparatorRow(cells)){
+      if(
+        isSeparatorRow(cells)
+      ){
         continue;
       }
 
 
-      while(cells.length < headers.length){
+      while(
+        cells.length <
+        headers.length
+      ){
         cells.push('');
       }
 
@@ -785,7 +817,10 @@
         cells[col.sr]
       );
 
-      const nSr = stripAccents(sr);
+
+      const nSr = stripAccents(
+        sr
+      );
 
 
       if(!sr){
@@ -794,41 +829,55 @@
 
 
       const rec = {
-
         sourceLine:i+1,
 
         stt:
           col.stt != null
-            ? cleanCell(cells[col.stt])
+            ? cleanCell(
+                cells[col.stt]
+              )
             : '',
 
         sr,
 
-        name:storeDisplay(sr),
+        name:
+          storeDisplay(sr),
 
         target:
-          parseNumber(cells[col.target]),
+          parseNumber(
+            cells[col.target]
+          ),
 
         actual:
-          parseNumber(cells[col.actual]),
+          parseNumber(
+            cells[col.actual]
+          ),
 
         pastedNeed:
           col.need != null
-            ? parseNumber(cells[col.need])
+            ? parseNumber(
+                cells[col.need]
+              )
             : NaN,
 
         pastedSurplus:
           col.surplus != null
-            ? parseNumber(cells[col.surplus])
+            ? parseNumber(
+                cells[col.surplus]
+              )
             : NaN,
 
         pastedPerDay:
           col.perDay != null
-            ? parseNumber(cells[col.perDay])
+            ? parseNumber(
+                cells[col.perDay]
+              )
             : NaN,
 
         pastedCompletion:
-          parsePercent(cells[col.completion])
+          parsePercent(
+            cells[col.completion]
+          )
       };
 
 
@@ -845,10 +894,10 @@
         !Number.isFinite(rec.target) ||
         !Number.isFinite(rec.actual)
       ){
-
         issues.push({
           type:'err',
-          text:`Dòng ${i+1} – ${sr}: TG tháng hoặc Thực đạt không phải số.`
+          text:
+            `Dòng ${i+1} – ${sr}: TG tháng hoặc Thực đạt không phải số.`
         });
 
         continue;
@@ -871,40 +920,41 @@
     let dateSource = '';
 
 
-    if(els.dateOverride.value){
-
+    if(
+      els.dateOverride.value
+    ){
       const d = new Date(
         els.dateOverride.value +
         'T00:00:00'
       );
 
-      if(!Number.isNaN(d.getTime())){
-
+      if(
+        !Number.isNaN(
+          d.getTime()
+        )
+      ){
         updateDate = d;
-
         dateSource = 'Ngày nhập tay';
       }
     }
 
 
     if(!updateDate){
-
-      for(const line of rawLines){
-
+      for(
+        const line of rawLines
+      ){
         if(
           stripAccents(line)
             .includes('cap nhat ngay')
         ){
-
-          const d = parseDateVN(line);
+          const d = parseDateVN(
+            line
+          );
 
           if(d){
-
             updateDate = d;
-
             dateSource =
               'Dòng Cập nhật ngày';
-
             break;
           }
         }
@@ -913,7 +963,6 @@
 
 
     if(!updateDate){
-
       const now = new Date();
 
       updateDate = new Date(
@@ -938,7 +987,9 @@
 
     let reportMonth =
       targetMonth ||
-      (autoClosingDate.getMonth()+1);
+      (
+        autoClosingDate.getMonth()+1
+      );
 
 
     let reportYear =
@@ -960,14 +1011,12 @@
       autoClosingDate.getMonth()+1 !==
       reportMonth
     ){
-
       issues.push({
         type:'warn',
         text:
           `Cột target là TG T${reportMonth} nhưng ngày chốt tự động là ${dateVN(autoClosingDate)}. ` +
           `Hãy kiểm tra lại tháng báo cáo hoặc nhập ngày cập nhật thủ công.`
       });
-
 
       currentDay = clamp(
         autoClosingDate.getDate(),
@@ -977,10 +1026,11 @@
     }
 
 
-    totalDays = daysInMonth(
-      reportYear,
-      reportMonth
-    );
+    totalDays =
+      daysInMonth(
+        reportYear,
+        reportMonth
+      );
 
 
     const closingDate =
@@ -1000,18 +1050,19 @@
       );
 
 
-    const seen = new Set();
+    const seen =
+      new Set();
 
 
     rows.forEach(
       (r,idx) => {
-
         const key =
           stripAccents(r.sr);
 
 
-        if(seen.has(key)){
-
+        if(
+          seen.has(key)
+        ){
           issues.push({
             type:'err',
             text:`Trùng SR ${r.sr}.`
@@ -1073,10 +1124,8 @@
         r.requiredPerDay =
           r.gapToKpi > 0 &&
           remainingDays > 0
-
             ? r.gapToKpi /
               remainingDays
-
             : 0;
 
 
@@ -1089,12 +1138,10 @@
             r.calcCompletion
           ) > 0.6
         ){
-
           issues.push({
             type:'warn',
             text:
-              `${r.sr}: Hoàn thành TG tháng dán ${fmtPct(r.pastedCompletion)} ` +
-              `nhưng Thực đạt/TG tháng = ${fmtPct(r.calcCompletion,1)}.`
+              `${r.sr}: Hoàn thành TG tháng dán ${fmtPct(r.pastedCompletion)} nhưng Thực đạt/TG tháng = ${fmtPct(r.calcCompletion,1)}.`
           });
         }
 
@@ -1108,12 +1155,10 @@
             r.expectedNeed
           ) > 0.6
         ){
-
           issues.push({
             type:'warn',
             text:
-              `${r.sr}: DS CẦN ĐẠT dán ${fmt1(r.pastedNeed)}; ` +
-              `tool tính ${fmt1(r.expectedNeed)}.`
+              `${r.sr}: DS CẦN ĐẠT dán ${fmt1(r.pastedNeed)}; tool tính ${fmt1(r.expectedNeed)}.`
           });
         }
 
@@ -1127,12 +1172,10 @@
             r.surplusVsSchedule
           ) > 0.7
         ){
-
           issues.push({
             type:'warn',
             text:
-              `${r.sr}: Thừa thiếu dán ${fmt1(r.pastedSurplus)}; ` +
-              `tool tính ${fmt1(r.surplusVsSchedule)}.`
+              `${r.sr}: Thừa thiếu dán ${fmt1(r.pastedSurplus)}; tool tính ${fmt1(r.surplusVsSchedule)}.`
           });
         }
 
@@ -1146,12 +1189,10 @@
             r.requiredPerDay
           ) > 0.7
         ){
-
           issues.push({
             type:'warn',
             text:
-              `${r.sr}: Target/ngày dán ${fmt1(r.pastedPerDay)}; ` +
-              `tool tính ${fmt1(r.requiredPerDay)}.`
+              `${r.sr}: Target/ngày dán ${fmt1(r.pastedPerDay)}; tool tính ${fmt1(r.requiredPerDay)}.`
           });
         }
       }
@@ -1159,38 +1200,42 @@
 
 
     const sumTarget =
-      sum(rows,r => r.target);
+      sum(
+        rows,
+        r => r.target
+      );
 
 
     const sumActual =
-      sum(rows,r => r.actual);
+      sum(
+        rows,
+        r => r.actual
+      );
 
 
     let systemTarget =
       totalRow &&
-      Number.isFinite(totalRow.target)
-
+      Number.isFinite(
+        totalRow.target
+      )
         ? totalRow.target
         : sumTarget;
 
 
     let systemActual =
       totalRow &&
-      Number.isFinite(totalRow.actual)
-
+      Number.isFinite(
+        totalRow.actual
+      )
         ? totalRow.actual
         : sumActual;
 
 
-    // % hoàn thành Target thực tế:
-    // Thực đạt / Target × 100
     let systemCalcPct =
       systemTarget > 0
-
         ? systemActual /
           systemTarget *
           100
-
         : 0;
 
 
@@ -1199,7 +1244,6 @@
       Number.isFinite(
         totalRow.pastedCompletion
       )
-
         ? totalRow.pastedCompletion
         : systemCalcPct;
 
@@ -1226,39 +1270,31 @@
     let requiredPerDay =
       systemGap > 0 &&
       remainingDays > 0
-
         ? systemGap /
           remainingDays
-
         : 0;
 
 
     let forecast =
       currentDay > 0
-
         ? systemActual /
           currentDay *
           totalDays
-
         : 0;
 
 
     let forecastPct =
       systemTarget > 0
-
         ? forecast /
           systemTarget *
           100
-
         : 0;
 
 
     let averagePerDay =
       currentDay > 0
-
         ? systemActual /
           currentDay
-
         : 0;
 
 
@@ -1274,14 +1310,12 @@
 
 
     if(totalRow){
-
       if(
         Math.abs(
           totalRow.target -
           sumTarget
         ) > 0.8
       ){
-
         issues.push({
           type:'warn',
           text:
@@ -1296,7 +1330,6 @@
           sumActual
         ) > 0.8
       ){
-
         issues.push({
           type:'warn',
           text:
@@ -1314,12 +1347,10 @@
           systemCalcPct
         ) > 0.6
       ){
-
         issues.push({
           type:'warn',
           text:
-            `Tổng Hoàn thành TG tháng dán ${fmtPct(totalRow.pastedCompletion)} ` +
-            `nhưng Thực đạt/TG tháng = ${fmtPct(systemCalcPct,1)}.`
+            `Tổng Hoàn thành TG tháng dán ${fmtPct(totalRow.pastedCompletion)} nhưng Thực đạt/TG tháng = ${fmtPct(systemCalcPct,1)}.`
         });
       }
 
@@ -1329,12 +1360,10 @@
           totalRow.pastedNeed
         )
       ){
-
         const exp =
           systemTarget *
           timeProgress /
           100;
-
 
         if(
           Math.abs(
@@ -1342,12 +1371,10 @@
             exp
           ) > 0.8
         ){
-
           issues.push({
             type:'warn',
             text:
-              `Tổng DS CẦN ĐẠT dán ${fmt1(totalRow.pastedNeed)}; ` +
-              `tool tính ${fmt1(exp)}.`
+              `Tổng DS CẦN ĐẠT dán ${fmt1(totalRow.pastedNeed)}; tool tính ${fmt1(exp)}.`
           });
         }
       }
@@ -1358,13 +1385,11 @@
           totalRow.pastedSurplus
         )
       ){
-
         const exp =
           systemActual -
           systemTarget *
           timeProgress /
           100;
-
 
         if(
           Math.abs(
@@ -1372,12 +1397,10 @@
             exp
           ) > 0.8
         ){
-
           issues.push({
             type:'warn',
             text:
-              `Tổng Thừa thiếu dán ${fmt1(totalRow.pastedSurplus)}; ` +
-              `tool tính ${fmt1(exp)}.`
+              `Tổng Thừa thiếu dán ${fmt1(totalRow.pastedSurplus)}; tool tính ${fmt1(exp)}.`
           });
         }
       }
@@ -1392,25 +1415,23 @@
           requiredPerDay
         ) > 0.8
       ){
-
         issues.push({
           type:'warn',
           text:
-            `Tổng Target/ngày dán ${fmt1(totalRow.pastedPerDay)}; ` +
-            `tool tính ${fmt1(requiredPerDay)}.`
+            `Tổng Target/ngày dán ${fmt1(totalRow.pastedPerDay)}; tool tính ${fmt1(requiredPerDay)}.`
         });
       }
     }
 
 
-    const sorted =
-      [...rows]
-        .sort(
-          (a,b) =>
-            b.pct-a.pct ||
-            b.actual-a.actual ||
-            a.rankInput-b.rankInput
-        );
+    const sorted = [
+      ...rows
+    ].sort(
+      (a,b) =>
+        b.pct-a.pct ||
+        b.actual-a.actual ||
+        a.rankInput-b.rankInput
+    );
 
 
     const top5 =
@@ -1426,7 +1447,10 @@
 
 
     sorted.forEach(
-      r => groups[r.status.key].push(r)
+      r =>
+        groups[
+          r.status.key
+        ].push(r)
     );
 
 
@@ -1443,21 +1467,17 @@
 
     const onTrackPct =
       sorted.length
-
         ? onTrackCount /
           sorted.length *
           100
-
         : 0;
 
 
     const slowPct =
       sorted.length
-
         ? slowCount /
           sorted.length *
           100
-
         : 0;
 
 
@@ -1467,17 +1487,17 @@
 
 
     const bottomStore =
-      sorted[sorted.length-1] ||
+      sorted[
+        sorted.length-1
+      ] ||
       null;
 
 
     const topBottomDiff =
       topStore &&
       bottomStore
-
         ? topStore.pct -
           bottomStore.pct
-
         : 0;
 
 
@@ -1537,9 +1557,7 @@
 
 
   function statusFromDiff(diff){
-
     if(diff < -10){
-
       return {
         key:'red',
         label:'CHẬM NHIỀU',
@@ -1549,9 +1567,7 @@
       };
     }
 
-
     if(diff < 0){
-
       return {
         key:'orange',
         label:'CHẬM',
@@ -1561,9 +1577,7 @@
       };
     }
 
-
     if(diff <= 10){
-
       return {
         key:'blue',
         label:'KỊP',
@@ -1572,7 +1586,6 @@
           'Bám sát / nhỉnh hơn kế hoạch'
       };
     }
-
 
     return {
       key:'green',
@@ -1585,79 +1598,63 @@
 
 
   function run(show=true){
-
     try{
-
-      model =
-        parsePastedData(
-          els.dataInput.value
-        );
-
+      model = parsePastedData(
+        els.dataInput.value
+      );
 
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
           data:
             els.dataInput.value,
-
           date:
             els.dateOverride.value
         })
       );
 
-
       renderValidation();
 
       renderPreview();
 
-
       if(show){
-
         const errs =
           model.issues.filter(
-            x => x.type === 'err'
+            x =>
+              x.type === 'err'
           );
-
 
         const warns =
           model.issues.filter(
-            x => x.type === 'warn'
+            x =>
+              x.type === 'warn'
           );
-
 
         if(
           errs.length ||
           warns.length
         ){
-
           showValidationPopup(
             errs,
             warns
           );
         }
         else{
-
           toast(
             'Dữ liệu hợp lệ • Dashboard đã cập nhật'
           );
         }
       }
     }
-
     catch(err){
-
       model = null;
-
 
       els.validationBox.innerHTML =
         `<div class="err">✕ ${escapeHtml(err.message)}</div>`;
 
-
       clearCanvas();
 
-
       if(show){
-
         showFatalPopup(
           err.message
         );
@@ -1667,7 +1664,6 @@
 
 
   function escapeHtml(s){
-
     return String(s)
       .replace(
         /[&<>"']/g,
@@ -1683,21 +1679,17 @@
 
 
   function renderValidation(){
-
     const m = model;
-
 
     const errs =
       m.issues.filter(
         x => x.type === 'err'
       );
 
-
     const warns =
       m.issues.filter(
         x => x.type === 'warn'
       );
-
 
     const lines = [];
 
@@ -1731,7 +1723,6 @@
       !errs.length &&
       !warns.length
     ){
-
       lines.push(
         `<div class="ok">✓ Các cột đối chiếu đều khớp trong ngưỡng làm tròn.</div>`
       );
@@ -1742,7 +1733,6 @@
       errs.length ||
       warns.length
     ){
-
       lines.push(
         `<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`
       );
@@ -1752,9 +1742,10 @@
     [...errs,...warns]
       .slice(0,22)
       .forEach(
-        x => lines.push(
-          `<div class="${x.type}">${x.type === 'err' ? '✕' : '⚠'} ${escapeHtml(x.text)}</div>`
-        )
+        x =>
+          lines.push(
+            `<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${escapeHtml(x.text)}</div>`
+          )
       );
 
 
@@ -1763,9 +1754,8 @@
       warns.length >
       22
     ){
-
       lines.push(
-        `<div class="muted">… còn ${errs.length + warns.length - 22} cảnh báo khác.</div>`
+        `<div class="muted">… còn ${errs.length+warns.length-22} cảnh báo khác.</div>`
       );
     }
 
@@ -1780,18 +1770,15 @@
 
 
   function openModal(){
-
     els.validationModal
       .classList
       .add('show');
-
 
     els.validationModal
       .setAttribute(
         'aria-hidden',
         'false'
       );
-
 
     setTimeout(
       () =>
@@ -1802,11 +1789,9 @@
 
 
   function closeModal(){
-
     els.validationModal
       .classList
       .remove('show');
-
 
     els.validationModal
       .setAttribute(
@@ -1820,13 +1805,14 @@
     errs,
     warns
   ){
-
     const hasError =
       errs.length > 0;
 
 
     els.validationModal
-      .querySelector('.modal-card')
+      .querySelector(
+        '.modal-card'
+      )
       .classList
       .toggle(
         'has-error',
@@ -1850,8 +1836,10 @@
       `${errs.length} lỗi • ${warns.length} cảnh báo. Dashboard vẫn hiển thị các dòng đọc được; hãy kiểm tra trước khi xuất ảnh.`;
 
 
-    const all =
-      [...errs,...warns];
+    const all = [
+      ...errs,
+      ...warns
+    ];
 
 
     els.modalIssues.innerHTML =
@@ -1859,15 +1847,13 @@
         .slice(0,16)
         .map(
           x =>
-            `<div class="modal-issue ${x.type}">${x.type === 'err' ? '✕' : '⚠'} ${escapeHtml(x.text)}</div>`
+            `<div class="modal-issue ${x.type}">${x.type==='err'?'✕':'⚠'} ${escapeHtml(x.text)}</div>`
         )
         .join('') +
 
       (
         all.length > 16
-
-          ? `<div class="modal-more">… còn ${all.length - 16} mục khác. Xem đầy đủ ở phần “3. Kiểm tra dữ liệu”.</div>`
-
+          ? `<div class="modal-more">… còn ${all.length-16} mục khác. Xem đầy đủ ở phần “3. Kiểm tra dữ liệu”.</div>`
           : ''
       );
 
@@ -1877,9 +1863,10 @@
 
 
   function showFatalPopup(message){
-
     els.validationModal
-      .querySelector('.modal-card')
+      .querySelector(
+        '.modal-card'
+      )
       .classList
       .add('has-error');
 
@@ -1908,7 +1895,9 @@
   // CANVAS HELPERS
   // =========================
 
-  function canvasWeight(weight='400'){
+  function canvasWeight(
+    weight='400'
+  ){
     return String(weight) === '700'
       ? '700'
       : '400';
@@ -1920,7 +1909,6 @@
     size,
     weight='400'
   ){
-
     ctx.font =
       `${canvasWeight(weight)} ${size}px ${FONT_STACK}`;
 
@@ -1942,7 +1930,6 @@
     weight='400',
     align='left'
   ){
-
     ctx.save();
 
     ctxFont(
@@ -1977,7 +1964,6 @@
     weight='700',
     align='center'
   ){
-
     ctx.save();
 
     ctx.font =
@@ -2014,18 +2000,14 @@
     align='left',
     min=10
   ){
-
     let z = size;
 
-
     while(z > min){
-
       ctxFont(
         ctx,
         z,
         weight
       );
-
 
       if(
         ctx.measureText(
@@ -2037,7 +2019,6 @@
 
       z -= .5;
     }
-
 
     text(
       ctx,
@@ -2064,35 +2045,27 @@
     align='left',
     min=10
   ){
-
     let z = size;
 
-
     while(z > min){
-
       ctx.save();
 
       ctx.font =
         `${canvasWeight(weight)} ${z}px ${FONT_STACK}`;
-
 
       const ok =
         ctx.measureText(
           String(s)
         ).width <= maxW;
 
-
       ctx.restore();
-
 
       if(ok){
         break;
       }
 
-
       z -= .5;
     }
-
 
     textMiddle(
       ctx,
@@ -2115,7 +2088,6 @@
     weight='400',
     maxLines=3
   ){
-
     ctx.save();
 
     ctxFont(
@@ -2124,13 +2096,11 @@
       weight
     );
 
-
     const words =
       String(s)
         .trim()
         .split(/\s+/)
         .filter(Boolean);
-
 
     const lines = [];
 
@@ -2144,33 +2114,27 @@
       idx<words.length;
       idx++
     ){
-
       const w =
         words[idx];
 
-
       const test =
         line
-          ? line + ' ' + w
+          ? line+' '+w
           : w;
-
 
       if(
         line &&
         ctx.measureText(test).width >
         maxW
       ){
-
         lines.push(line);
 
         line = w;
-
 
         if(
           lines.length ===
           maxLines-1
         ){
-
           used =
             idx+1;
 
@@ -2178,11 +2142,8 @@
         }
       }
       else{
-
         line = test;
-
-        used =
-          idx+1;
+        used = idx+1;
       }
     }
 
@@ -2192,7 +2153,6 @@
       lines.length <
       maxLines
     ){
-
       lines.push(line);
     }
 
@@ -2206,33 +2166,30 @@
       truncated &&
       lines.length
     ){
-
       let last =
         lines[
           lines.length-1
         ];
 
-
       while(
         last.length > 2 &&
         ctx.measureText(
-          last + '…'
-        ).width > maxW
+          last+'…'
+        ).width >
+        maxW
       ){
-
         last =
           last.slice(0,-1);
       }
 
-
       lines[
         lines.length-1
-      ] = last + '…';
+      ] =
+        last+'…';
     }
 
 
     ctx.restore();
-
 
     return lines.length
       ? lines
@@ -2252,7 +2209,6 @@
     weight='400',
     maxLines=3
   ){
-
     const lines =
       wrapLines(
         ctx,
@@ -2263,7 +2219,6 @@
         maxLines
       );
 
-
     ctx.save();
 
     ctxFont(
@@ -2272,30 +2227,25 @@
       weight
     );
 
-
     ctx.fillStyle =
       color;
 
     ctx.textAlign =
       'left';
 
-
     lines.forEach(
       (ln,i) =>
         ctx.fillText(
           ln,
           x,
-          y +
-          i*lineH
+          y+i*lineH
         )
     );
 
-
     ctx.restore();
 
-
-    return y +
-      lines.length *
+    return y+
+      lines.length*
       lineH;
   }
 
@@ -2311,7 +2261,6 @@
     stroke=null,
     lw=1
   ){
-
     ctx.save();
 
     ctx.beginPath();
@@ -2324,18 +2273,14 @@
       r
     );
 
-
     if(fill){
-
       ctx.fillStyle =
         fill;
 
       ctx.fill();
     }
 
-
     if(stroke){
-
       ctx.strokeStyle =
         stroke;
 
@@ -2344,7 +2289,6 @@
 
       ctx.stroke();
     }
-
 
     ctx.restore();
   }
@@ -2359,7 +2303,6 @@
     color,
     lw=1
   ){
-
     ctx.save();
 
     ctx.strokeStyle =
@@ -2395,7 +2338,6 @@
     stroke=null,
     lw=1
   ){
-
     ctx.save();
 
     ctx.beginPath();
@@ -2408,15 +2350,12 @@
       Math.PI*2
     );
 
-
     ctx.fillStyle =
       fill;
 
     ctx.fill();
 
-
     if(stroke){
-
       ctx.strokeStyle =
         stroke;
 
@@ -2425,7 +2364,6 @@
 
       ctx.stroke();
     }
-
 
     ctx.restore();
   }
@@ -2441,24 +2379,20 @@
     b,
     vertical=false
   ){
-
     const g =
       vertical
-
         ? ctx.createLinearGradient(
             x,
             y,
             x,
             y+h
           )
-
         : ctx.createLinearGradient(
             x,
             y,
             x+w,
             y
           );
-
 
     g.addColorStop(
       0,
@@ -2469,7 +2403,6 @@
       1,
       b
     );
-
 
     return g;
   }
@@ -2483,7 +2416,6 @@
     h,
     r=10
   ){
-
     ctx.save();
 
     ctx.shadowColor =
@@ -2495,7 +2427,6 @@
     ctx.shadowOffsetY =
       2;
 
-
     rr(
       ctx,
       x,
@@ -2505,7 +2436,6 @@
       r,
       '#fff'
     );
-
 
     ctx.restore();
   }
@@ -2521,7 +2451,6 @@
     color,
     marker=null
   ){
-
     rr(
       ctx,
       x,
@@ -2532,7 +2461,6 @@
       C.track
     );
 
-
     const fw =
       w *
       clamp(
@@ -2542,9 +2470,7 @@
       ) /
       100;
 
-
     if(fw > 0){
-
       rr(
         ctx,
         x,
@@ -2556,21 +2482,18 @@
       );
     }
 
-
     if(
       Number.isFinite(marker)
     ){
-
       const mx =
-        x +
-        w *
+        x+
+        w*
         clamp(
           marker,
           0,
           100
-        ) /
+        )/
         100;
-
 
       line(
         ctx,
@@ -2593,7 +2516,6 @@
     color,
     down=false
   ){
-
     ctx.save();
 
     ctx.strokeStyle =
@@ -2610,9 +2532,7 @@
 
     ctx.beginPath();
 
-
     if(down){
-
       ctx.moveTo(
         x,
         y
@@ -2649,7 +2569,6 @@
       );
     }
     else{
-
       ctx.moveTo(
         x,
         y+size*.48
@@ -2686,7 +2605,6 @@
       );
     }
 
-
     ctx.stroke();
 
     ctx.restore();
@@ -2700,22 +2618,18 @@
     cy,
     size
   ){
-
     const img =
       ICON_IMAGES[key];
-
 
     if(
       img &&
       img.complete &&
       img.naturalWidth
     ){
-
       ctx.save();
 
       ctx.imageSmoothingEnabled =
         true;
-
 
       ctx.drawImage(
         img,
@@ -2725,12 +2639,10 @@
         size
       );
 
-
       ctx.restore();
 
       return true;
     }
-
 
     return false;
   }
@@ -2744,7 +2656,6 @@
     size,
     color
   ){
-
     const r =
       size/2;
 
@@ -2756,7 +2667,6 @@
 
     const light =
       color;
-
 
     ctx.save();
 
@@ -2782,8 +2692,7 @@
       );
 
 
-    if(type === 'clock'){
-
+    if(type==='clock'){
       circle(
         ctx,
         cx,
@@ -2791,7 +2700,6 @@
         r*.45,
         light
       );
-
 
       ctx.strokeStyle =
         '#fff';
@@ -2801,7 +2709,6 @@
           3,
           size*.055
         );
-
 
       ctx.beginPath();
 
@@ -2814,7 +2721,6 @@
       );
 
       ctx.stroke();
-
 
       ctx.beginPath();
 
@@ -2835,7 +2741,6 @@
 
       ctx.stroke();
 
-
       circle(
         ctx,
         cx,
@@ -2845,8 +2750,7 @@
       );
     }
 
-    else if(type === 'target'){
-
+    else if(type==='target'){
       ctx.strokeStyle =
         light;
 
@@ -2855,7 +2759,6 @@
           3.3,
           size*.062
         );
-
 
       ctx.beginPath();
 
@@ -2869,7 +2772,6 @@
 
       ctx.stroke();
 
-
       ctx.beginPath();
 
       ctx.arc(
@@ -2882,7 +2784,6 @@
 
       ctx.stroke();
 
-
       ctx.strokeStyle =
         dark;
 
@@ -2891,7 +2792,6 @@
           3.4,
           size*.064
         );
-
 
       ctx.beginPath();
 
@@ -2906,7 +2806,6 @@
       );
 
       ctx.stroke();
-
 
       ctx.beginPath();
 
@@ -2928,8 +2827,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'calendar'){
-
+    else if(type==='calendar'){
       rr(
         ctx,
         cx-r*.43,
@@ -2939,7 +2837,6 @@
         r*.08,
         light
       );
-
 
       rr(
         ctx,
@@ -2951,7 +2848,6 @@
         dark
       );
 
-
       ctx.strokeStyle =
         dark;
 
@@ -2961,7 +2857,6 @@
           size*.052
         );
 
-
       line(
         ctx,
         cx-r*.23,
@@ -2975,7 +2870,6 @@
         )
       );
 
-
       line(
         ctx,
         cx+r*.23,
@@ -2988,7 +2882,6 @@
           size*.052
         )
       );
-
 
       [
         [-.22,.00],
@@ -3010,16 +2903,14 @@
     }
 
     else if(
-      type === 'sales' ||
-      type === 'forecast'
+      type==='sales' ||
+      type==='forecast'
     ){
-
       const base =
         cy+r*.36;
 
       const bw =
         r*.18;
-
 
       [
         [-.38,.34],
@@ -3027,7 +2918,6 @@
         [.18,.78]
       ].forEach(
         ([dx,h],i) => {
-
           rr(
             ctx,
             cx+r*dx,
@@ -3035,13 +2925,12 @@
             bw,
             r*h,
             r*.025,
-            i === 2
+            i===2
               ? dark
               : light
           );
         }
       );
-
 
       ctx.strokeStyle =
         dark;
@@ -3051,7 +2940,6 @@
           3.2,
           size*.058
         );
-
 
       ctx.beginPath();
 
@@ -3077,7 +2965,6 @@
 
       ctx.stroke();
 
-
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3098,8 +2985,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'schedule'){
-
+    else if(type==='schedule'){
       ctx.strokeStyle =
         light;
 
@@ -3108,7 +2994,6 @@
           3.5,
           size*.066
         );
-
 
       ctx.beginPath();
 
@@ -3134,7 +3019,6 @@
 
       ctx.stroke();
 
-
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3155,8 +3039,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'gap'){
-
+    else if(type==='gap'){
       ctx.strokeStyle =
         light;
 
@@ -3165,7 +3048,6 @@
           3.5,
           size*.066
         );
-
 
       ctx.beginPath();
 
@@ -3185,7 +3067,6 @@
       );
 
       ctx.stroke();
-
 
       ctx.beginPath();
 
@@ -3207,7 +3088,6 @@
       ctx.stroke();
     }
 
-
     ctx.restore();
   }
 
@@ -3219,7 +3099,6 @@
     size,
     color
   ){
-
     const r =
       size/2;
 
@@ -3228,7 +3107,6 @@
         color,
         .63
       );
-
 
     ctx.save();
 
@@ -3241,7 +3119,6 @@
     ctx.shadowBlur =
       0;
 
-
     rr(
       ctx,
       cx-r*.27,
@@ -3252,7 +3129,6 @@
       color
     );
 
-
     ctx.strokeStyle =
       dark;
 
@@ -3261,7 +3137,6 @@
         2.6,
         size*.06
       );
-
 
     ctx.beginPath();
 
@@ -3279,7 +3154,6 @@
       cy+r*.02
     );
 
-
     ctx.moveTo(
       cx+r*.27,
       cy-r*.24
@@ -3296,7 +3170,6 @@
 
     ctx.stroke();
 
-
     rr(
       ctx,
       cx-r*.07,
@@ -3306,7 +3179,6 @@
       r*.02,
       dark
     );
-
 
     rr(
       ctx,
@@ -3318,7 +3190,6 @@
       dark
     );
 
-
     circle(
       ctx,
       cx,
@@ -3326,7 +3197,6 @@
       r*.08,
       '#fff3b0'
     );
-
 
     ctx.restore();
   }
@@ -3339,7 +3209,6 @@
     size,
     color
   ){
-
     const r =
       size/2;
 
@@ -3349,12 +3218,10 @@
         .64
       );
 
-
     ctx.save();
 
     ctx.shadowBlur =
       0;
-
 
     rr(
       ctx,
@@ -3365,7 +3232,6 @@
       r*.12,
       color
     );
-
 
     ctx.fillStyle =
       dark;
@@ -3391,7 +3257,6 @@
 
     ctx.fill();
 
-
     [-.22,0,.22]
       .forEach(
         dx =>
@@ -3403,7 +3268,6 @@
             '#fff'
           )
       );
-
 
     ctx.restore();
   }
@@ -3417,10 +3281,8 @@
     size,
     color
   ){
-
     const r =
       size/2;
-
 
     ctx.save();
 
@@ -3445,9 +3307,7 @@
         size*.082
       );
 
-
-    if(type === 'trend'){
-
+    if(type==='trend'){
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3472,7 +3332,6 @@
 
       ctx.stroke();
 
-
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3493,8 +3352,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'check'){
-
+    else if(type==='check'){
       circle(
         ctx,
         cx,
@@ -3507,7 +3365,6 @@
           size*.082
         )
       );
-
 
       ctx.beginPath();
 
@@ -3529,8 +3386,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'pace'){
-
+    else if(type==='pace'){
       ctx.beginPath();
 
       ctx.arc(
@@ -3542,7 +3398,6 @@
       );
 
       ctx.stroke();
-
 
       ctx.beginPath();
 
@@ -3558,7 +3413,6 @@
 
       ctx.stroke();
 
-
       circle(
         ctx,
         cx,
@@ -3568,8 +3422,7 @@
       );
     }
 
-    else if(type === 'warning'){
-
+    else if(type==='warning'){
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3591,7 +3444,6 @@
 
       ctx.stroke();
 
-
       line(
         ctx,
         cx,
@@ -3605,7 +3457,6 @@
         )
       );
 
-
       circle(
         ctx,
         cx,
@@ -3614,7 +3465,6 @@
         color
       );
     }
-
 
     ctx.restore();
   }
@@ -3628,7 +3478,6 @@
     color,
     type
   ){
-
     circle(
       ctx,
       cx,
@@ -3636,7 +3485,6 @@
       r,
       '#fff'
     );
-
 
     ctx.save();
 
@@ -3655,9 +3503,7 @@
     ctx.lineJoin =
       'round';
 
-
-    if(type === 'clock'){
-
+    if(type==='clock'){
       circle(
         ctx,
         cx,
@@ -3667,7 +3513,6 @@
         color,
         4
       );
-
 
       ctx.beginPath();
 
@@ -3689,8 +3534,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'target'){
-
+    else if(type==='target'){
       circle(
         ctx,
         cx,
@@ -3701,7 +3545,6 @@
         4
       );
 
-
       circle(
         ctx,
         cx,
@@ -3711,7 +3554,6 @@
         color,
         3
       );
-
 
       ctx.beginPath();
 
@@ -3743,8 +3585,7 @@
       ctx.stroke();
     }
 
-    else if(type === 'calendar'){
-
+    else if(type==='calendar'){
       rr(
         ctx,
         cx-r*.48,
@@ -3757,7 +3598,6 @@
         3
       );
 
-
       line(
         ctx,
         cx-r*.48,
@@ -3768,7 +3608,6 @@
         3
       );
 
-
       line(
         ctx,
         cx-r*.25,
@@ -3779,7 +3618,6 @@
         3
       );
 
-
       line(
         ctx,
         cx+r*.25,
@@ -3789,12 +3627,9 @@
         color,
         3
       );
-
 
       for(let i=0;i<3;i++){
-
         for(let j=0;j<2;j++){
-
           circle(
             ctx,
             cx-r*.27+i*r*.27,
@@ -3806,8 +3641,7 @@
       }
     }
 
-    else if(type === 'sales'){
-
+    else if(type==='sales'){
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3871,7 +3705,6 @@
       );
 
       ctx.stroke();
-
 
       arrowIcon(
         ctx,
@@ -3883,8 +3716,7 @@
       );
     }
 
-    else if(type === 'forecast'){
-
+    else if(type==='forecast'){
       ctx.beginPath();
 
       ctx.moveTo(
@@ -3949,7 +3781,6 @@
 
       ctx.stroke();
 
-
       arrowIcon(
         ctx,
         cx-r*.52,
@@ -3959,7 +3790,6 @@
         false
       );
     }
-
 
     ctx.restore();
   }
@@ -3972,7 +3802,6 @@
     size,
     color
   ){
-
     ctx.save();
 
     ctx.fillStyle =
@@ -3984,7 +3813,6 @@
     ctx.lineWidth =
       2;
 
-
     rr(
       ctx,
       x+size*.32,
@@ -3994,7 +3822,6 @@
       4,
       color
     );
-
 
     ctx.beginPath();
 
@@ -4012,7 +3839,6 @@
       y+size*.30
     );
 
-
     ctx.moveTo(
       x+size*.68,
       y+size*.08
@@ -4029,7 +3855,6 @@
 
     ctx.stroke();
 
-
     rr(
       ctx,
       x+size*.45,
@@ -4040,7 +3865,6 @@
       color
     );
 
-
     rr(
       ctx,
       x+size*.28,
@@ -4050,7 +3874,6 @@
       3,
       color
     );
-
 
     ctx.restore();
   }
@@ -4063,12 +3886,10 @@
     size,
     color
   ){
-
     ctx.save();
 
     ctx.fillStyle =
       color;
-
 
     rr(
       ctx,
@@ -4079,7 +3900,6 @@
       4,
       color
     );
-
 
     ctx.beginPath();
 
@@ -4100,13 +3920,10 @@
 
     ctx.fill();
 
-
     ctx.fillStyle =
       '#fff';
 
-
     for(let i=0;i<3;i++){
-
       circle(
         ctx,
         x+size*.25+i*size*.22,
@@ -4115,7 +3932,6 @@
         '#fff'
       );
     }
-
 
     ctx.restore();
   }
@@ -4130,7 +3946,6 @@
     color1,
     color2
   ){
-
     ctx.save();
 
     ctx.lineWidth =
@@ -4160,7 +3975,6 @@
         cy+r
       );
 
-
     g.addColorStop(
       0,
       color1
@@ -4170,7 +3984,6 @@
       1,
       color2
     );
-
 
     ctx.strokeStyle =
       g;
@@ -4182,13 +3995,13 @@
       cy,
       r,
       -Math.PI/2,
-      -Math.PI/2 +
-      Math.PI*2 *
+      -Math.PI/2+
+      Math.PI*2*
       clamp(
         pct,
         0,
         100
-      ) /
+      )/
       100
     );
 
@@ -4199,7 +4012,6 @@
 
 
   function drawBackground(ctx){
-
     const g =
       ctx.createLinearGradient(
         0,
@@ -4207,7 +4019,6 @@
         1536,
         1024
       );
-
 
     g.addColorStop(
       0,
@@ -4224,7 +4035,6 @@
       '#06111b'
     );
 
-
     ctx.fillStyle =
       g;
 
@@ -4235,15 +4045,12 @@
       1024
     );
 
-
     ctx.save();
 
     ctx.globalAlpha =
       .08;
 
-
     for(let i=0;i<28;i++){
-
       circle(
         ctx,
         40+i*63,
@@ -4253,7 +4060,6 @@
       );
     }
 
-
     ctx.restore();
   }
 
@@ -4262,11 +4068,7 @@
   // DASHBOARD
   // =========================
 
-  function drawDashboard(
-    ctx,
-    m
-  ){
-
+  function drawDashboard(ctx,m){
     drawBackground(ctx);
 
 
@@ -4404,9 +4206,7 @@
       132;
 
 
-    // -------------------------
-    // KPI 1: TIẾN ĐỘ THỜI GIAN
-    // -------------------------
+    // 1. TIẾN ĐỘ THỜI GIAN
 
     shadowCard(
       ctx,
@@ -4480,13 +4280,11 @@
     );
 
 
-    // -------------------------
-    // KPI 2:
-    // TỶ LỆ HOÀN THÀNH TARGET
-    //
-    // CHỈ HIỂN THỊ %
+    // =========================
+    // 2. TỶ LỆ HOÀN THÀNH TARGET
+    // CHỈ HIỆN %
     // 1 SỐ SAU DẤU PHẨY
-    // -------------------------
+    // =========================
 
     shadowCard(
       ctx,
@@ -4518,10 +4316,6 @@
     );
 
 
-    // QUAN TRỌNG:
-    // dùng systemCalcPct =
-    // Thực đạt / Target × 100
-    // và hiển thị 1 số sau dấu phẩy.
     fitText(
       ctx,
       fmtPct(
@@ -4540,11 +4334,7 @@
 
 
     // =========================
-    // BỎ HOÀN TOÀN CARD
-    // "TARGET THÁNG"
-    //
-    // Phần trống được mở rộng cho
-    // Bình quân/ngày + Forecast
+    // ĐÃ BỎ CARD TARGET THÁNG
     // =========================
 
     const rightKpiX =
@@ -4579,10 +4369,11 @@
       halfW/2;
 
 
-    // -------------------------
-    // KPI 3A:
-    // DOANH SỐ BÌNH QUÂN / NGÀY
-    // -------------------------
+    // =========================
+    // 3A. DOANH SỐ BÌNH QUÂN / NGÀY
+    // CHỈ HIỆN SỐ + "tr"
+    // KHÔNG HIỆN DOANH SỐ / SỐ NGÀY
+    // =========================
 
     drawAssetIcon(
       ctx,
@@ -4617,11 +4408,9 @@
 
     fitText(
       ctx,
-      fmtWhole(
-        m.averagePerDay
-      ),
+      `${fmt1(m.averagePerDay)} tr`,
       leftCX+12,
-      y+52,
+      y+58,
       310,
       49,
       C.greenDark,
@@ -4631,24 +4420,10 @@
     );
 
 
-    fitText(
-      ctx,
-      `${fmtWhole(m.systemActual)} / ${m.currentDay} ngày`,
-      leftCX,
-      y+104,
-      330,
-      17.7,
-      C.text,
-      '700',
-      'center',
-      14.8
-    );
-
-
-    // Đường chia giữa 2 KPI
+    // Chia đôi khung
 
     const rightDivider =
-      rightKpiX +
+      rightKpiX+
       halfW;
 
 
@@ -4663,13 +4438,10 @@
     );
 
 
-    // -------------------------
-    // KPI 3B:
-    // DỰ ĐOÁN DOANH SỐ CUỐI THÁNG
-    //
-    // CHỈ HIỂN THỊ %
-    // KHÔNG HIỂN THỊ DOANH SỐ
-    // -------------------------
+    // =========================
+    // 3B. DỰ ĐOÁN DOANH SỐ
+    // CHỈ HIỆN %
+    // =========================
 
     drawAssetIcon(
       ctx,
@@ -4876,14 +4648,12 @@
 
     m.sorted.forEach(
       (r,i) => {
-
         const ry =
-          startY +
+          startY+
           i*rowH;
 
 
-        if(i > 0){
-
+        if(i>0){
           line(
             ctx,
             lx+18,
@@ -5004,13 +4774,11 @@
     [0,25,50,75,100]
       .forEach(
         v => {
-
           const x =
-            xBar +
-            barW *
-            v /
+            xBar+
+            barW*
+            v/
             100;
-
 
           text(
             ctx,
@@ -5096,9 +4864,8 @@
 
     m.top5.forEach(
       (r,i) => {
-
         const yy =
-          289 +
+          289+
           i*31.0;
 
 
@@ -5232,7 +4999,6 @@
 
 
     const groupDefs = [
-
       [
         'green',
         'trend',
@@ -5276,14 +5042,13 @@
 
 
     const contentH =
-      contentBottom -
+      contentBottom-
       contentTop;
 
 
     const layouts =
       groupDefs.map(
         g => {
-
           const arr =
             m.groups[g[0]];
 
@@ -5310,12 +5075,12 @@
 
 
           const natural =
-            5 +
-            18 +
-            3 +
-            lines.length*16.5 +
-            3 +
-            14 +
+            5+
+            18+
+            3+
+            lines.length*16.5+
+            3+
+            14+
             5;
 
 
@@ -5340,13 +5105,13 @@
     const extra =
       Math.max(
         0,
-        contentH -
+        contentH-
         naturalTotal
       );
 
 
     const extraEach =
-      extra /
+      extra/
       layouts.length;
 
 
@@ -5356,9 +5121,8 @@
 
     layouts.forEach(
       (it,gi) => {
-
         let gh =
-          it.natural +
+          it.natural+
           extraEach;
 
 
@@ -5366,15 +5130,13 @@
           gi ===
           layouts.length-1
         ){
-
           gh =
-            contentBottom -
+            contentBottom-
             gy;
         }
 
 
         if(gi){
-
           line(
             ctx,
             930,
@@ -5441,7 +5203,7 @@
             ctx.fillText(
               ln,
               978,
-              namesY +
+              namesY+
               li*16.5
             )
         );
@@ -5451,8 +5213,8 @@
 
 
         const actionY =
-          namesY +
-          it.lines.length*16.5 +
+          namesY+
+          it.lines.length*16.5+
           3;
 
 
@@ -5477,6 +5239,7 @@
 
     // =========================
     // LOWER RIGHT
+    // DOANH SỐ NHANH / CHẬM
     // =========================
 
     const lowY =
@@ -5521,9 +5284,7 @@
 
     const scheduleValueTitle =
       scheduleValue >= 0
-
         ? 'DOANH SỐ VƯỢT TIẾN ĐỘ'
-
         : 'DOANH SỐ CHẬM TIẾN ĐỘ';
 
 
@@ -5548,37 +5309,26 @@
     );
 
 
+    // CHỈ HIỆN GIÁ TRỊ + ĐƠN VỊ "tr"
+    // ĐÃ BỎ DÒNG "KẾ HOẠCH THEO TG"
+
     fitText(
       ctx,
-      fmtSignedWhole(
-        scheduleValue
-      ),
+      `${fmtSignedWhole(scheduleValue)} tr`,
       1072,
-      lowY+37,
-      205,
-      29,
+      lowY+47,
+      220,
+      31,
       scheduleValueColor,
       '700',
       'center',
-      23
+      24
     );
 
 
-    fitText(
-      ctx,
-      `Kế hoạch theo TG: ${fmtWhole(m.expectedByTime)}`,
-      1072,
-      lowY+66,
-      225,
-      14.2,
-      C.text,
-      '700',
-      'center',
-      12.6
-    );
-
-
+    // =========================
     // GAP KPI
+    // =========================
 
     text(
       ctx,
@@ -5692,7 +5442,6 @@
 
 
     const aux = [
-
       {
         label:'ĐẠT TIẾN ĐỘ:',
         value:
@@ -5710,10 +5459,8 @@
       {
         label:
           'CHÊNH LỆCH TOP-BOTTOM:',
-
         value:
           `${fmtNum(m.topBottomDiff)} điểm %`,
-
         color:C.navy2
       }
     ];
@@ -5721,10 +5468,9 @@
 
     aux.forEach(
       (a,i) => {
-
         const sx =
-          auxX +
-          i *
+          auxX+
+          i*
           (auxSeg+auxGap);
 
 
@@ -5781,7 +5527,7 @@
 
 
     // =========================
-    // FOOTER STATUS LEGEND
+    // FOOTER LEGEND
     // =========================
 
     const legendY =
@@ -5805,7 +5551,6 @@
 
 
     const legend = [
-
       [
         C.red,
         'CHẬM NHIỀU:',
@@ -5869,19 +5614,17 @@
 
     legend.forEach(
       (l,i) => {
-
         const sx =
-          footerX +
+          footerX+
           i*seg;
 
 
         const center =
-          sx +
+          sx+
           seg/2;
 
 
         if(i){
-
           line(
             ctx,
             sx,
@@ -5921,15 +5664,15 @@
 
 
         const total =
-          dotD +
-          gapDot +
-          lw +
-          gapText +
+          dotD+
+          gapDot+
+          lw+
+          gapText+
           cw;
 
 
         const startX =
-          center -
+          center-
           total/2;
 
 
@@ -5963,8 +5706,8 @@
 
         ctx.fillText(
           l[1],
-          startX +
-          dotD +
+          startX+
+          dotD+
           gapDot,
           legendY+16
         );
@@ -5980,10 +5723,10 @@
 
         ctx.fillText(
           l[2],
-          startX +
-          dotD +
-          gapDot +
-          lw +
+          startX+
+          dotD+
+          gapDot+
+          lw+
           gapText,
           legendY+16
         );
@@ -6010,18 +5753,14 @@
 
 
   function clearCanvas(){
-
     const c =
       els.previewCanvas;
-
 
     const ctx =
       c.getContext('2d');
 
-
     ctx.fillStyle =
       C.bg;
-
 
     ctx.fillRect(
       0,
@@ -6029,7 +5768,6 @@
       c.width,
       c.height
     );
-
 
     text(
       ctx,
@@ -6045,17 +5783,14 @@
 
 
   function renderPreview(){
-
     const c =
       els.previewCanvas;
-
 
     c.width =
       BASE.w;
 
     c.height =
       BASE.h;
-
 
     const ctx =
       c.getContext(
@@ -6065,32 +5800,27 @@
         }
       );
 
-
     drawDashboard(
       ctx,
       model
     );
-
 
     fitPreview();
   }
 
 
   function fitPreview(){
-
     const maxW =
       Math.max(
         320,
         els.previewScroll.clientWidth-36
       );
 
-
     const maxH =
       Math.max(
         320,
         els.previewScroll.clientHeight-36
       );
-
 
     const scale =
       Math.min(
@@ -6099,18 +5829,14 @@
         1
       );
 
-
     els.previewCanvas.style.width =
       `${Math.round(BASE.w*scale)}px`;
-
 
     els.previewCanvas.style.height =
       `${Math.round(BASE.h*scale)}px`;
 
-
     els.canvasWrap.style.width =
       `${Math.round(BASE.w*scale)}px`;
-
 
     els.canvasWrap.style.height =
       `${Math.round(BASE.h*scale)}px`;
@@ -6118,12 +5844,9 @@
 
 
   function canvasToBlob(canvas){
-
     return new Promise(
       (resolve,reject) =>
-
         canvas.toBlob(
-
           b =>
             b
               ? resolve(b)
@@ -6132,7 +5855,6 @@
                     'Không tạo được PNG.'
                   )
                 ),
-
           'image/png'
         )
     );
@@ -6143,28 +5865,21 @@
     blob,
     name
   ){
-
     const a =
       document.createElement('a');
-
 
     a.href =
       URL.createObjectURL(blob);
 
-
     a.download =
       name;
 
-
     document.body.appendChild(a);
-
 
     a.click();
 
-
     setTimeout(
       () => {
-
         URL.revokeObjectURL(
           a.href
         );
@@ -6180,9 +5895,7 @@
     spec,
     button
   ){
-
     if(!model){
-
       toast(
         'Hãy phân tích dữ liệu trước'
       );
@@ -6196,10 +5909,8 @@
 
 
     try{
-
       els.exportBtn.disabled =
         true;
-
 
       els.export4kBtn.disabled =
         true;
@@ -6218,7 +5929,6 @@
       c.width =
         spec.w;
 
-
       c.height =
         spec.h;
 
@@ -6233,7 +5943,7 @@
 
 
       const scale =
-        spec.w /
+        spec.w/
         BASE.w;
 
 
@@ -6267,26 +5977,19 @@
         `Đã xuất PNG ${spec.tag}`
       );
     }
-
     catch(e){
-
       console.error(e);
-
 
       toast(
         'Xuất ảnh thất bại'
       );
     }
-
     finally{
-
       els.exportBtn.disabled =
         false;
 
-
       els.export4kBtn.disabled =
         false;
-
 
       button.innerHTML =
         oldHtml;
@@ -6295,19 +5998,15 @@
 
 
   function toast(msg){
-
     els.toast.textContent =
       msg;
-
 
     els.toast.classList
       .add('show');
 
-
     clearTimeout(
       toast.t
     );
-
 
     toast.t =
       setTimeout(
@@ -6320,9 +6019,7 @@
 
 
   function load(){
-
     try{
-
       const s =
         JSON.parse(
           localStorage.getItem(
@@ -6331,19 +6028,15 @@
           '{}'
         );
 
-
       els.dataInput.value =
         s.data ||
         SAMPLE;
-
 
       els.dateOverride.value =
         s.date ||
         '';
     }
-
     catch(_){
-
       els.dataInput.value =
         SAMPLE;
     }
@@ -6365,14 +6058,11 @@
     .addEventListener(
       'click',
       () => {
-
         els.dataInput.value =
           SAMPLE;
 
-
         els.dateOverride.value =
           '';
-
 
         iconsReady.then(
           () =>
@@ -6386,9 +6076,7 @@
     .addEventListener(
       'click',
       async () => {
-
         await iconsReady;
-
 
         return exportPng(
           EXPORT_2K,
@@ -6402,9 +6090,7 @@
     .addEventListener(
       'click',
       async () => {
-
         await iconsReady;
-
 
         return exportPng(
           EXPORT_4K,
@@ -6432,12 +6118,10 @@
     .addEventListener(
       'click',
       e => {
-
         if(
           e.target ===
           els.validationModal
         ){
-
           closeModal();
         }
       }
@@ -6448,14 +6132,12 @@
     .addEventListener(
       'keydown',
       e => {
-
         if(
           e.key === 'Escape' &&
           els.validationModal
             .classList
             .contains('show')
         ){
-
           closeModal();
         }
       }
