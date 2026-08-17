@@ -64,6 +64,18 @@ function fmt(v,d=0){return Number(v||0).toLocaleString('vi-VN',{minimumFractionD
 function fmtSmart(v){const n=Number(v||0);return n.toLocaleString('vi-VN',{maximumFractionDigits:Number.isInteger(n)?0:2});}
 function pct(v,d=1){return fmt(v,d)+'%';}
 function signed(v,d=1){const n=Number(v||0);return `${n>0?'+':''}${fmt(n,d)}`;}
+function shortageText(actual,target){
+  const balance=Number(target||0)-Number(actual||0);
+  if(balance>0)return fmtSmart(balance);
+  if(balance<0)return `Vượt +${fmtSmart(Math.abs(balance))}`;
+  return '0';
+}
+function shortageColor(actual,target){
+  const balance=Number(target||0)-Number(actual||0);
+  if(balance>0)return C.orange;
+  if(balance<0)return C.greenDark;
+  return C.navy;
+}
 function numCell(s){const t=clean(s).replace(/\s/g,'').replace(/%/g,'');if(!t)return NaN;let x=t;if(x.includes(',')&&!x.includes('.'))x=x.replace(',','.');else if(x.includes('.')&&x.includes(','))x=x.replace(/\./g,'').replace(',','.');const n=Number(x);return Number.isFinite(n)?n:NaN;}
 function splitLine(line){if(line.includes('\t'))return line.split('\t').map(clean);if(line.includes('|'))return line.split('|').map(clean).filter((x,i,a)=>!(x===''&&(i===0||i===a.length-1)));if(line.includes(';'))return line.split(';').map(clean);return line.trim().split(/\s{2,}/).map(clean);}
 function canonicalText(text){const n=' '+strip(text).replace(/[^A-Z0-9 ]/g,' ')+' ';let best=null,bestLen=-1;FIXED.forEach(s=>s.aliases.forEach(a=>{const aa=strip(a),re=new RegExp(`(^|\\s)${aa.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(?=\\s|$)`);if(re.test(n)&&aa.length>bestLen){best=s;bestLen=aa.length;}}));return best;}
@@ -98,18 +110,33 @@ function parseData(text){
       if(Number.isFinite(actual)&&Number.isFinite(target))totalInput={actual,target,line:idx+1};
       return;
     }
-    let store=null,actual=NaN,target=NaN;
-    if(hi>=0){store=canonicalText(cells[idxSR]||line);actual=numCell(cells[idxActual]);target=numCell(cells[idxTarget]);}
-    if(!store)store=canonicalText(line);
+    let store=null,actual=NaN,target=NaN,displayName='',storeCell=-1;
+    if(hi>=0){
+      displayName=clean(cells[idxSR]||'');
+      store=canonicalText(displayName||line);
+      actual=numCell(cells[idxActual]);
+      target=numCell(cells[idxTarget]);
+      storeCell=idxSR;
+    }
+    if(!store){
+      storeCell=cells.findIndex(c=>canonicalText(c));
+      if(storeCell>=0){
+        displayName=clean(cells[storeCell]);
+        store=canonicalText(cells[storeCell]);
+      }else{
+        store=canonicalText(line);
+      }
+    }
     if(!store)return;
+    if(!displayName)displayName=clean(cells[storeCell]||store.code);
     if(!Number.isFinite(actual)||!Number.isFinite(target)){
-      const storeCell=cells.findIndex(c=>canonicalText(c)?.code===store.code);
+      if(storeCell<0)storeCell=cells.findIndex(c=>canonicalText(c)?.code===store.code);
       const nums=[];for(let j=Math.max(0,storeCell+1);j<cells.length;j++){const n=numCell(cells[j]);if(Number.isFinite(n))nums.push(n);}if(nums.length>=2){actual=nums[0];target=nums[1];}
     }
     if(!Number.isFinite(actual)||!Number.isFinite(target)){issues.push({type:'err',text:`Dòng ${idx+1}: nhận ra ${store.code} nhưng chưa đọc được TỔNG và TG Tháng.`});return;}
     if(target<=0){issues.push({type:'err',text:`Dòng ${idx+1}: TG Tháng của ${store.code} phải lớn hơn 0.`});return;}
     if(found.has(store.code))issues.push({type:'err',text:`Trùng showroom ${store.code}; tool dùng dòng xuất hiện sau cùng.`});
-    found.set(store.code,{...store,actual,target,line:idx+1});
+    found.set(store.code,{...store,name:displayName,actual,target,line:idx+1});
   });
 
   FIXED.filter(s=>!found.has(s.code)).forEach(s=>issues.push({type:'err',text:`Thiếu showroom ${s.code} – ${s.name}.`}));
@@ -119,7 +146,7 @@ function parseData(text){
   const rows=FIXED.map(s=>{
     const f=found.get(s.code)||{actual:0,target:0};
     const complete=f.target>0?f.actual/f.target*100:0,diff=complete-timeProgress,remaining=Math.max(f.target-f.actual,0),needPerDay=remaining===0?0:(daysLeft>0?remaining/daysLeft:remaining),currentPace=day>0?f.actual/day:0,paceGap=needPerDay-currentPace,st=stateFor(f.actual,complete,timeProgress);
-    return {...s,actual:f.actual,target:f.target,complete,diff,remaining,needPerDay,currentPace,paceGap,status:st,missing:!found.has(s.code)};
+    return {...s,name:(f.name||s.code),actual:f.actual,target:f.target,complete,diff,remaining,needPerDay,currentPace,paceGap,status:st,missing:!found.has(s.code)};
   });
   const sorted=[...rows].sort((a,b)=>b.complete-a.complete||b.actual-a.actual||FIXED.findIndex(x=>x.code===a.code)-FIXED.findIndex(x=>x.code===b.code));
   const totalActual=rows.reduce((a,r)=>a+r.actual,0),totalTarget=rows.reduce((a,r)=>a+r.target,0),totalComplete=totalTarget?totalActual/totalTarget*100:0,totalDiff=totalComplete-timeProgress,totalRemaining=Math.max(totalTarget-totalActual,0),totalNeedPerDay=totalRemaining===0?0:(daysLeft>0?totalRemaining/daysLeft:totalRemaining),totalState=stateFor(totalActual,totalComplete,timeProgress);
@@ -272,26 +299,55 @@ function drawTable(ctx,m){
   rr(ctx,x,y,w,h,12,'#fff','#d5d9df',1.4);
   panelHead(ctx,x,y,356,titleH,'BẢNG XẾP HẠNG CỬA HÀNG');
   const hy=y+titleH;ctx.fillStyle=C.navy;ctx.fillRect(x,hy,w,headH);
-  const widths=[58,176,78,296,92,110,110],edges=[x];widths.forEach(v=>edges.push(edges[edges.length-1]+v));
-  ['BXH','CỬA HÀNG','% ĐẠT','TIẾN ĐỘ','+/- TG','CẦN TB/NGÀY','TRẠNG THÁI'].forEach((t,i)=>fitMid(ctx,t,(edges[i]+edges[i+1])/2,hy+headH/2,widths[i]-8,15,'#fff',700,'center',10.5));
+
+  // Cột CỬA HÀNG co/giãn theo đúng nội dung SR đang nhập.
+  // Tên ngắn => cột tên hẹp, thanh tiến độ dài hơn.
+  // Tên dài => cột tên nới ra, thanh tiến độ co lại nhưng vẫn có giới hạn hợp lý.
+  const rankW=58,pctW=82,deltaW=94,shortageW=136,statusW=112;
+  const longestNamePx=Math.max(
+    textWidth(ctx,'CỬA HÀNG',15,700),
+    ...m.sorted.map(r=>textWidth(ctx,r.name,17.2,700))
+  );
+  const nameW=clamp(Math.ceil(longestNamePx+30),98,190);
+  const progressW=w-rankW-nameW-pctW-deltaW-shortageW-statusW;
+  const widths=[rankW,nameW,pctW,progressW,deltaW,shortageW,statusW];
+  const edges=[x];widths.forEach(v=>edges.push(edges[edges.length-1]+v));
+
+  ['BXH','CỬA HÀNG','% ĐẠT','TIẾN ĐỘ','+/- TG','CÒN THIẾU','TRẠNG THÁI'].forEach((t,i)=>
+    fitMid(ctx,t,(edges[i]+edges[i+1])/2,hy+headH/2,widths[i]-8,15,'#fff',700,'center',10.5)
+  );
+
   const rowTop=hy+headH,rowH=(h-titleH-headH-totalH)/16;
   m.sorted.forEach((r,i)=>{
     const yy=rowTop+i*rowH,cy=yy+rowH/2;
     if(i)line(ctx,x+6,yy,x+w-6,yy,'#e5e8ec',1);
     if(i<3)medal(ctx,(edges[0]+edges[1])/2,cy,i+1);else mid(ctx,i+1,(edges[0]+edges[1])/2,cy,16,C.navy,700);
-    fitMid(ctx,r.name,edges[1]+11,cy,widths[1]-18,17.2,C.ink,700,'left',12);
+    fitMid(ctx,r.name,edges[1]+13,cy,widths[1]-24,17.2,C.ink,700,'left',11.5);
     fitMid(ctx,pct(r.complete,0),(edges[2]+edges[3])/2,cy,widths[2]-8,19,C.navy,700,'center',13);
     progress(ctx,edges[3]+14,cy-6.5,widths[3]-28,13,r.complete,r.status.color,m.timeProgress);
-    fitMid(ctx,signed(r.diff,1),(edges[4]+edges[5])/2,cy,widths[4]-10,16,r.status.color,700,'center',11.5);
-    fitMid(ctx,fmt(r.needPerDay,2),(edges[5]+edges[6])/2,cy,widths[5]-10,16,C.navy,700,'center',11.5);
+
+    // +/- TG luôn kèm ký hiệu %.
+    fitMid(ctx,`${signed(r.diff,1)}%`,(edges[4]+edges[5])/2,cy,widths[4]-10,16,r.status.color,700,'center',11.5);
+
+    // CÒN THIẾU / VƯỢT dùng cùng màu với trạng thái tiến độ của cửa hàng.
+    // Ví dụ: cửa hàng Chậm => số Còn thiếu màu cam/đỏ tương ứng; Vượt/Kịp => theo màu tiến độ.
+    fitMid(ctx,shortageText(r.actual,r.target),(edges[5]+edges[6])/2,cy,widths[5]-12,16,r.status.color,700,'center',10.5);
     fitMid(ctx,r.status.label,(edges[6]+edges[7])/2,cy,widths[6]-8,15.2,r.status.color,700,'center',10.5);
   });
+
   const ty=y+h-totalH;ctx.fillStyle='#f8fafc';ctx.fillRect(x+1,ty,w-2,totalH-1);line(ctx,x,ty,x+w,ty,C.navy,2.2);
-  fitMid(ctx,'TỔNG HỆ THỐNG',edges[1]+11,ty+totalH/2,widths[1]+widths[2]-18,18,C.navy,700,'left',13.5);
+
+  // TỔNG HỆ THỐNG: dùng toàn bộ vùng BXH + CỬA HÀNG, căn hẳn về lề trái.
+  // Không đặt chữ trong riêng cột tên nữa để tránh chèn sang cột % ĐẠT.
+  fitMid(ctx,'TỔNG HỆ THỐNG',x+16,ty+totalH/2,(edges[2]-x)-28,22,C.navy,700,'left',15.5);
+
   fitMid(ctx,pct(m.totalComplete,1),(edges[2]+edges[3])/2,ty+totalH/2,widths[2]-8,20,C.navy,700,'center',14);
   progress(ctx,edges[3]+14,ty+15.5,widths[3]-28,13,m.totalComplete,m.totalState.color,m.timeProgress);
-  fitMid(ctx,signed(m.totalDiff,1),(edges[4]+edges[5])/2,ty+totalH/2,widths[4]-10,17,m.totalState.color,700,'center',12);
-  fitMid(ctx,fmt(m.totalNeedPerDay,2),(edges[5]+edges[6])/2,ty+totalH/2,widths[5]-10,17,C.navy,700,'center',12);
+  fitMid(ctx,`${signed(m.totalDiff,1)}%`,(edges[4]+edges[5])/2,ty+totalH/2,widths[4]-10,17,m.totalState.color,700,'center',12);
+
+  // Tổng CÒN THIẾU / VƯỢT cũng dùng cùng màu trạng thái tiến độ toàn hệ thống.
+  fitMid(ctx,shortageText(m.totalActual,m.totalTarget),(edges[5]+edges[6])/2,ty+totalH/2,widths[5]-12,17,m.totalState.color,700,'center',11);
+
   fitMid(ctx,m.totalState.label,(edges[6]+edges[7])/2,ty+totalH/2,widths[6]-8,15.5,m.totalState.color,700,'center',10.5);
 }
 function drawGroupCard(ctx,m){
