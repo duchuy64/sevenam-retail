@@ -145,11 +145,25 @@ function parseData(text){
   const dates=getClosingDate(),reportDate=dates.report,closing=dates.closing,totalDays=daysInMonth(closing.getFullYear(),closing.getMonth()+1),day=closing.getDate(),daysLeft=Math.max(0,totalDays-day),timeProgress=day/totalDays*100;
   const rows=FIXED.map(s=>{
     const f=found.get(s.code)||{actual:0,target:0};
-    const complete=f.target>0?f.actual/f.target*100:0,diff=complete-timeProgress,remaining=Math.max(f.target-f.actual,0),needPerDay=remaining===0?0:(daysLeft>0?remaining/daysLeft:remaining),currentPace=day>0?f.actual/day:0,paceGap=needPerDay-currentPace,st=stateFor(f.actual,complete,timeProgress);
-    return {...s,name:(f.name||s.code),actual:f.actual,target:f.target,complete,diff,remaining,needPerDay,currentPace,paceGap,status:st,missing:!found.has(s.code)};
+    const complete=f.target>0?f.actual/f.target*100:0;
+    const diff=complete-timeProgress;
+    const remaining=Math.max(f.target-f.actual,0);
+    const needPerDay=remaining===0?0:(daysLeft>0?remaining/daysLeft:remaining);
+
+    // HÔM NAY CẦN BÁN:
+    // - Chỉ khi cửa hàng đã đạt Target tháng (Thực đạt >= Target, remaining === 0) => mặc định 0.
+    // - Nếu chưa đạt Target tháng, kể cả đang KỊP/VƯỢT tiến độ thời gian, vẫn tính Còn thiếu / số ngày còn lại.
+    // - Luôn làm tròn lên, không số lẻ.
+    // - Nếu không còn ngày nào trong tháng => 0 để tránh chia cho 0.
+    const todayNeed=remaining===0?0:(daysLeft>0?Math.ceil(remaining/daysLeft):0);
+
+    const currentPace=day>0?f.actual/day:0;
+    const paceGap=needPerDay-currentPace;
+    const st=stateFor(f.actual,complete,timeProgress);
+    return {...s,name:(f.name||s.code),actual:f.actual,target:f.target,complete,diff,remaining,needPerDay,todayNeed,currentPace,paceGap,status:st,missing:!found.has(s.code)};
   });
   const sorted=[...rows].sort((a,b)=>b.complete-a.complete||b.actual-a.actual||FIXED.findIndex(x=>x.code===a.code)-FIXED.findIndex(x=>x.code===b.code));
-  const totalActual=rows.reduce((a,r)=>a+r.actual,0),totalTarget=rows.reduce((a,r)=>a+r.target,0),totalComplete=totalTarget?totalActual/totalTarget*100:0,totalDiff=totalComplete-timeProgress,totalRemaining=Math.max(totalTarget-totalActual,0),totalNeedPerDay=totalRemaining===0?0:(daysLeft>0?totalRemaining/daysLeft:totalRemaining),totalState=stateFor(totalActual,totalComplete,timeProgress);
+  const totalActual=rows.reduce((a,r)=>a+r.actual,0),totalTarget=rows.reduce((a,r)=>a+r.target,0),totalComplete=totalTarget?totalActual/totalTarget*100:0,totalDiff=totalComplete-timeProgress,totalRemaining=Math.max(totalTarget-totalActual,0),totalNeedPerDay=totalRemaining===0?0:(daysLeft>0?totalRemaining/daysLeft:totalRemaining),totalTodayNeed=totalRemaining===0?0:(daysLeft>0?Math.ceil(totalRemaining/daysLeft):0),totalState=stateFor(totalActual,totalComplete,timeProgress);
   const forecastUnits=day>0?(totalActual/day*totalDays):0,forecastPct=totalTarget?forecastUnits/totalTarget*100:0;
   const groups={green:[],blue:[],orange:[],red:[],gray:[]};sorted.forEach(r=>groups[r.status.key].push(r));
   const priority=sorted.filter(r=>['orange','red','gray'].includes(r.status.key)).sort((a,b)=>b.paceGap-a.paceGap||a.diff-b.diff).slice(0,4);
@@ -157,10 +171,10 @@ function parseData(text){
   if(totalInput){
     if(Math.abs(totalInput.actual-totalActual)>.001||Math.abs(totalInput.target-totalTarget)>.001)issues.push({type:'warn',text:`Dòng TỔNG nguồn là ${fmtSmart(totalInput.actual)}/${fmtSmart(totalInput.target)}, nhưng cộng 16 showroom = ${fmtSmart(totalActual)}/${fmtSmart(totalTarget)}. Dashboard dùng tổng cộng từ 16 showroom.`});
   }
-  return {rows,sorted,groups,priority,issues,reportDate,closing,totalDays,day,daysLeft,timeProgress,totalActual,totalTarget,totalComplete,totalDiff,totalRemaining,totalNeedPerDay,totalState,forecastUnits,forecastPct};
+  return {rows,sorted,groups,priority,issues,reportDate,closing,totalDays,day,daysLeft,timeProgress,totalActual,totalTarget,totalComplete,totalDiff,totalRemaining,totalNeedPerDay,totalTodayNeed,totalState,forecastUnits,forecastPct};
 }
 
-function renderValidation(){const m=model,errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn'),out=[];out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);out.push(`<div class="ok">✓ Tổng: ${fmtSmart(m.totalActual)} / ${fmtSmart(m.totalTarget)} túi = ${pct(m.totalComplete,1)}</div>`);out.push(`<div class="ok">✓ Cập nhật: ${dateVN(m.reportDate)} • Chốt hết ngày: ${dateVN(m.closing)} • Tiến độ TG: ${pct(m.timeProgress,1)} • Còn ${m.daysLeft} ngày</div>`);out.push(`<div class="ok">✓ Cần TB: ${fmt(m.totalNeedPerDay,1)} túi/ngày • Forecast: ${pct(m.forecastPct,0)}</div>`);if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);[...errs,...warns].forEach(x=>out.push(`<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`));if(!errs.length&&!warns.length)out.push('<div class="ok">✓ Dữ liệu hợp lệ, có thể xuất ảnh.</div>');els.validation.innerHTML=out.join('');els.meta.textContent=`16 showroom • ${errs.length} lỗi • ${warns.length} cảnh báo`;els.export2k.disabled=errs.length>0;els.export4k.disabled=errs.length>0;}
+function renderValidation(){const m=model,errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn'),out=[];out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);out.push(`<div class="ok">✓ Tổng: ${fmtSmart(m.totalActual)} / ${fmtSmart(m.totalTarget)} túi = ${pct(m.totalComplete,1)}</div>`);out.push(`<div class="ok">✓ Cập nhật: ${dateVN(m.reportDate)} • Chốt hết ngày: ${dateVN(m.closing)} • Tiến độ TG: ${pct(m.timeProgress,1)} • Còn ${m.daysLeft} ngày</div>`);out.push(`<div class="ok">✓ Cần TB: ${fmt(m.totalNeedPerDay,1)} túi/ngày • Hôm nay cần bán: ${fmtSmart(m.totalTodayNeed)} túi • Forecast: ${pct(m.forecastPct,0)}</div>`);if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);[...errs,...warns].forEach(x=>out.push(`<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`));if(!errs.length&&!warns.length)out.push('<div class="ok">✓ Dữ liệu hợp lệ, có thể xuất ảnh.</div>');els.validation.innerHTML=out.join('');els.meta.textContent=`16 showroom • ${errs.length} lỗi • ${warns.length} cảnh báo`;els.export2k.disabled=errs.length>0;els.export4k.disabled=errs.length>0;}
 function showIssues(){const errs=model.issues.filter(x=>x.type==='err'),warns=model.issues.filter(x=>x.type==='warn');if(!errs.length&&!warns.length)return;els.modalBadge.textContent=errs.length?'PHÁT HIỆN LỖI':'CÓ CẢNH BÁO';els.modalTitle.textContent=errs.length?'Dữ liệu chưa đủ để xuất ảnh':'Có dữ liệu cần kiểm tra';els.modalSummary.textContent=`${errs.length} lỗi • ${warns.length} cảnh báo.`;els.modalIssues.innerHTML=[...errs,...warns].map(x=>`<div class="issue ${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`).join('');els.modal.classList.add('show');}
 function closeModal(){els.modal.classList.remove('show');}
 function toast(s){els.toast.textContent=s;els.toast.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove('show'),1700);}
@@ -303,18 +317,21 @@ function drawTable(ctx,m){
   // Cột CỬA HÀNG co/giãn theo đúng nội dung SR đang nhập.
   // Tên ngắn => cột tên hẹp, thanh tiến độ dài hơn.
   // Tên dài => cột tên nới ra, thanh tiến độ co lại nhưng vẫn có giới hạn hợp lý.
-  const rankW=58,pctW=82,deltaW=94,shortageW=136,statusW=112;
+  // Giữ nguyên nguyên tắc giãn cột: tên cửa hàng co/giãn theo nội dung,
+  // phần không gian còn lại tự dồn cho thanh TIẾN ĐỘ.
+  // Thêm HÔM NAY CẦN BÁN nhưng vẫn giữ khoảng cách gọn giữa các cột.
+  const rankW=54,pctW=72,deltaW=82,shortageW=102,todayW=124,statusW=108;
   const longestNamePx=Math.max(
     textWidth(ctx,'CỬA HÀNG',15,700),
     ...m.sorted.map(r=>textWidth(ctx,r.name,17.2,700))
   );
-  const nameW=clamp(Math.ceil(longestNamePx+30),98,190);
-  const progressW=w-rankW-nameW-pctW-deltaW-shortageW-statusW;
-  const widths=[rankW,nameW,pctW,progressW,deltaW,shortageW,statusW];
+  const nameW=clamp(Math.ceil(longestNamePx+30),98,170);
+  const progressW=w-rankW-nameW-pctW-deltaW-shortageW-todayW-statusW;
+  const widths=[rankW,nameW,pctW,progressW,deltaW,shortageW,todayW,statusW];
   const edges=[x];widths.forEach(v=>edges.push(edges[edges.length-1]+v));
 
-  ['BXH','CỬA HÀNG','% ĐẠT','TIẾN ĐỘ','+/- TG','CÒN THIẾU','TRẠNG THÁI'].forEach((t,i)=>
-    fitMid(ctx,t,(edges[i]+edges[i+1])/2,hy+headH/2,widths[i]-8,15,'#fff',700,'center',10.5)
+  ['BXH','CỬA HÀNG','% ĐẠT','TIẾN ĐỘ','+/- TG','CÒN THIẾU','HÔM NAY CẦN BÁN','TRẠNG THÁI'].forEach((t,i)=>
+    fitMid(ctx,t,(edges[i]+edges[i+1])/2,hy+headH/2,widths[i]-8,14.5,'#fff',700,'center',9.5)
   );
 
   const rowTop=hy+headH,rowH=(h-titleH-headH-totalH)/16;
@@ -330,9 +347,12 @@ function drawTable(ctx,m){
     fitMid(ctx,`${signed(r.diff,1)}%`,(edges[4]+edges[5])/2,cy,widths[4]-10,16,r.status.color,700,'center',11.5);
 
     // CÒN THIẾU / VƯỢT dùng cùng màu với trạng thái tiến độ của cửa hàng.
-    // Ví dụ: cửa hàng Chậm => số Còn thiếu màu cam/đỏ tương ứng; Vượt/Kịp => theo màu tiến độ.
-    fitMid(ctx,shortageText(r.actual,r.target),(edges[5]+edges[6])/2,cy,widths[5]-12,16,r.status.color,700,'center',10.5);
-    fitMid(ctx,r.status.label,(edges[6]+edges[7])/2,cy,widths[6]-8,15.2,r.status.color,700,'center',10.5);
+    fitMid(ctx,shortageText(r.actual,r.target),(edges[5]+edges[6])/2,cy,widths[5]-10,15.5,r.status.color,700,'center',10);
+
+    // HÔM NAY CẦN BÁN: số nguyên, luôn làm tròn lên; chỉ đạt Target tháng mới = 0.
+    fitMid(ctx,fmtSmart(r.todayNeed),(edges[6]+edges[7])/2,cy,widths[6]-10,16.5,r.status.color,700,'center',11);
+
+    fitMid(ctx,r.status.label,(edges[7]+edges[8])/2,cy,widths[7]-8,14.8,r.status.color,700,'center',10);
   });
 
   const ty=y+h-totalH;ctx.fillStyle='#f8fafc';ctx.fillRect(x+1,ty,w-2,totalH-1);line(ctx,x,ty,x+w,ty,C.navy,2.2);
@@ -346,9 +366,12 @@ function drawTable(ctx,m){
   fitMid(ctx,`${signed(m.totalDiff,1)}%`,(edges[4]+edges[5])/2,ty+totalH/2,widths[4]-10,17,m.totalState.color,700,'center',12);
 
   // Tổng CÒN THIẾU / VƯỢT cũng dùng cùng màu trạng thái tiến độ toàn hệ thống.
-  fitMid(ctx,shortageText(m.totalActual,m.totalTarget),(edges[5]+edges[6])/2,ty+totalH/2,widths[5]-12,17,m.totalState.color,700,'center',11);
+  fitMid(ctx,shortageText(m.totalActual,m.totalTarget),(edges[5]+edges[6])/2,ty+totalH/2,widths[5]-10,16,m.totalState.color,700,'center',10.5);
 
-  fitMid(ctx,m.totalState.label,(edges[6]+edges[7])/2,ty+totalH/2,widths[6]-8,15.5,m.totalState.color,700,'center',10.5);
+  // Tổng HÔM NAY CẦN BÁN: chỉ khi toàn hệ thống đã đạt Target tháng mới = 0.
+  fitMid(ctx,fmtSmart(m.totalTodayNeed),(edges[6]+edges[7])/2,ty+totalH/2,widths[6]-10,17,m.totalState.color,700,'center',11);
+
+  fitMid(ctx,m.totalState.label,(edges[7]+edges[8])/2,ty+totalH/2,widths[7]-8,15,m.totalState.color,700,'center',10);
 }
 function drawGroupCard(ctx,m){
   const x=952,y=427,w=564,h=236;
