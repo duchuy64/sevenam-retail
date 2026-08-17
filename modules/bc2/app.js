@@ -191,7 +191,7 @@ function renderValidation(){
   const errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn');
   const out=[];
   out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);
-  out.push(`<div class="ok">✓ Tổng hệ thống: ${fmtPct(m.total,0)} • Tiến độ thời gian: ${fmtPct(m.timeProgress,2)}</div>`);
+  out.push(`<div class="ok">✓ Tổng hệ thống: ${fmtPct(m.total,2)} • Tiến độ thời gian: ${fmtPct(m.timeProgress,2)}</div>`);
   out.push(`<div class="ok">✓ Chốt: ${dateVN(m.closing)} • Cập nhật: ${dateVN(m.update)}</div>`);
   out.push(`<div class="muted">Nguồn ngày: ${esc(m.dateSource)}</div>`);
   if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);
@@ -928,7 +928,7 @@ function drawLeft(ctx,m){
   const totalY=y+h-57;
   line(ctx,x+4,totalY,x+w-4,totalY,C.navy,3);
   mid(ctx,'Tổng hệ thống',62,totalY+29,26,C.navy,700,'left');
-  fitMid(ctx,fmtPct0(m.total),658,totalY+29,150,34,C.navy2,700,'right',28);
+  fitMid(ctx,fmtPct0(m.total,2),658,totalY+29,150,34,C.navy2,700,'right',28);
 }
 function drawSystemCard(ctx,m){
   const x=703,y=167,w=475,h=333;
@@ -937,7 +937,7 @@ function drawSystemCard(ctx,m){
   mid(ctx,'TIẾN ĐỘ DOANH SỐ TOÀN HỆ THỐNG',x+w/2,y+28,20,'#fff');
 
   // KPI tổng hệ thống
-  fit(ctx,fmtPct0(m.total),x+w/2,y+64,w-60,96,C.purple,700,'center',80);
+  fit(ctx,fmtPct0(m.total,2),x+w/2,y+64,w-60,96,C.purple,700,'center',80);
 
   const bx=x+31,bw=w-62;
   // Thanh hoàn thành hệ thống
@@ -950,9 +950,42 @@ function drawSystemCard(ctx,m){
   fitMid(ctx,`${fmtPct(m.timeProgress,2)}  (${m.day}/${m.totalDays} ngày)`,x+w-31,y+234,215,17,C.blue,700,'right',14);
   progress(ctx,bx,y+251,bw,20,m.timeProgress,C.blue);
 
-  // Dòng kết luận dưới cùng, không lặp lại số ngày
-  const diff=m.total-m.timeProgress, st=status(diff);
-  fitMid(ctx,`${st.short.toUpperCase()} ${diff>=0?'+':''}${fmtPct(diff,2)} SO VỚI TIẾN ĐỘ`,x+w/2,y+307,w-58,18,st.color,700,'center',14.5);
+  // Dòng kết luận so với tiến độ thời gian
+const diff = m.total - m.timeProgress;
+const st = status(diff);
+
+const absDiff = Math.abs(diff).toLocaleString(
+  'vi-VN',
+  {
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  }
+);
+
+let paceText = '';
+
+if(Math.abs(diff) < 0.005){
+  paceText = 'KỊP TIẾN ĐỘ';
+}
+else if(diff > 0){
+  paceText = `VƯỢT ${absDiff} ĐIỂM % SO VỚI TIẾN ĐỘ THỜI GIAN`;
+}
+else{
+  paceText = `CHẬM ${absDiff} ĐIỂM % SO VỚI TIẾN ĐỘ THỜI GIAN`;
+}
+
+fitMid(
+  ctx,
+  paceText,
+  x+w/2,
+  y+307,
+  w-58,
+  18,
+  st.color,
+  700,
+  'center',
+  14.5
+);
 }
 function drawLegend(ctx,m){
   const x=703,y=511,w=475,h=272;
