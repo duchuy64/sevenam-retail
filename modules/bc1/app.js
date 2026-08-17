@@ -234,10 +234,14 @@ function parseData(text){
   sorted.forEach(r=>groups[r.status.key].push(r));
   const totalDiff=Number.isFinite(total)?total-timeProgress:0,totalState=stateFor(Number.isFinite(total)?total:0,timeProgress);
   const achievedCount=groups.green.length+groups.blue.length;
-  const slowCount=groups.orange.length+groups.red.length;
-  const zeroCount=groups.gray.length;
-  const achievedPct=achievedCount/FIXED.length*100;
-  const slowPct=slowCount/FIXED.length*100;
+
+// CHẬM TIẾN ĐỘ = Chậm + Chậm nhiều + Chưa phát sinh
+const slowCount=groups.orange.length+groups.red.length+groups.gray.length;
+
+const zeroCount=groups.gray.length;
+
+const achievedPct=achievedCount/FIXED.length*100;
+const slowPct=slowCount/FIXED.length*100;
 
   return {rows,sorted,total,groups,issues,reportHour:rt.hour,timeSource:rt.source,reportDate:rd.date,dateSource:rd.source,elapsed,timeProgress,totalDiff,totalState,achievedCount,slowCount,zeroCount,achievedPct,slowPct};
 }
