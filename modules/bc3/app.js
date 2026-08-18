@@ -118,9 +118,18 @@
   function fmt0(v){return Math.round(Number(v)||0).toLocaleString('vi-VN');}
   function fmtWhole(v){return Math.trunc(Number(v)||0).toLocaleString('vi-VN');}
   function fmtNum(v){const n=Number(v)||0;return Math.abs(n-Math.round(n))<0.05?fmt0(n):fmt1(n);}
-  function fmtPct(v,d=0){return (Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
-  function fmtPoint(v){const n=Math.abs(Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2});return `${v>=0?'+':'−'}${n}`;}
-  function fmtStatusDelta(v){const n=Math.abs(Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2});return `${v>=0?'+':'-'}${n}%`;}
+
+  // Chuẩn hóa toàn bộ % động của BC3 về đúng 1 chữ số thập phân.
+  function roundPct1(v){
+    const n=Number(v);
+    if(!Number.isFinite(n)) return 0;
+    return Math.round((n + Math.sign(n || 1) * Number.EPSILON) * 10) / 10;
+  }
+
+  // Luôn hiển thị đủ 1 số sau dấu phẩy: 40,0% / 41,3%.
+  function fmtPct(v,d=1){return roundPct1(v).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
+  function fmtPoint(v){const n=Math.abs(roundPct1(v)).toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});return `${Number(v)>=0?'+':'−'}${n}`;}
+  function fmtStatusDelta(v){const n=Math.abs(roundPct1(v)).toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});return `${Number(v)>=0?'+':'-'}${n}%`;}
   function fmtSignedWhole(v){const n=Math.abs(Math.trunc(Number(v)||0)).toLocaleString('vi-VN');return `${Number(v)>=0?'+':'-'}${n}`;}
   function statusDisplay(diff){if(diff<0)return `Chậm ${fmtStatusDelta(diff)}`;if(diff<=10)return `Kịp ${fmtStatusDelta(diff)}`;return `Vượt ${fmtStatusDelta(diff)}`;}
   function parseDateVN(s){const m=String(s||'').match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);if(!m)return null;const d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d);return Number.isNaN(dt.getTime())?null:dt;}
@@ -241,22 +250,22 @@
 
     totalDays=daysInMonth(reportYear,reportMonth);
     const closingDate=autoClosingDate;
-    const timeProgress=currentDay/totalDays*100;
+    const timeProgress=roundPct1(currentDay/totalDays*100);
     const remainingDays=Math.max(0,totalDays-currentDay);
 
     const seen=new Set();
     rows.forEach((r,idx)=>{
       const key=stripAccents(r.sr); if(seen.has(key))issues.push({type:'err',text:`Trùng SR ${r.sr}.`}); seen.add(key);
       r.rankInput=Number(r.stt)||idx+1;
-      r.calcCompletion=r.target>0?r.actual/r.target*100:0;
-      r.pct=Number.isFinite(r.pastedCompletion)?r.pastedCompletion:r.calcCompletion; // requested source for schedule comparison
-      r.timeDiff=r.pct-timeProgress;
+      r.calcCompletion=roundPct1(r.target>0?r.actual/r.target*100:0);
+      r.pct=roundPct1(Number.isFinite(r.pastedCompletion)?r.pastedCompletion:r.calcCompletion); // requested source for schedule comparison
+      r.timeDiff=roundPct1(r.pct-timeProgress);
       r.status=statusFromDiff(r.timeDiff);
       r.expectedNeed=r.target*timeProgress/100;
       r.surplusVsSchedule=r.actual-r.expectedNeed;
       r.gapToKpi=r.target-r.actual;
       r.requiredPerDay=r.gapToKpi>0&&remainingDays>0?r.gapToKpi/remainingDays:0;
-      if(Number.isFinite(r.pastedCompletion)&&Math.abs(r.pastedCompletion-r.calcCompletion)>0.6) issues.push({type:'warn',text:`${r.sr}: Hoàn thành TG tháng dán ${fmtPct(r.pastedCompletion)} nhưng Thực đạt/TG tháng = ${fmtPct(r.calcCompletion,1)}.`});
+      if(Number.isFinite(r.pastedCompletion)&&Math.abs(r.pastedCompletion-r.calcCompletion)>0.6) issues.push({type:'warn',text:`${r.sr}: Hoàn thành TG tháng dán ${fmtPct(r.pastedCompletion,1)} nhưng Thực đạt/TG tháng = ${fmtPct(r.calcCompletion,1)}.`});
       if(Number.isFinite(r.pastedNeed)&&Math.abs(r.pastedNeed-r.expectedNeed)>0.6) issues.push({type:'warn',text:`${r.sr}: DS CẦN ĐẠT dán ${fmt1(r.pastedNeed)}; tool tính ${fmt1(r.expectedNeed)}.`});
       if(Number.isFinite(r.pastedSurplus)&&Math.abs(r.pastedSurplus-r.surplusVsSchedule)>0.7) issues.push({type:'warn',text:`${r.sr}: Thừa thiếu dán ${fmt1(r.pastedSurplus)}; tool tính ${fmt1(r.surplusVsSchedule)}.`});
       if(Number.isFinite(r.pastedPerDay)&&Math.abs(r.pastedPerDay-r.requiredPerDay)>0.7) issues.push({type:'warn',text:`${r.sr}: Target/ngày dán ${fmt1(r.pastedPerDay)}; tool tính ${fmt1(r.requiredPerDay)}.`});
@@ -265,14 +274,14 @@
     const sumTarget=sum(rows,r=>r.target), sumActual=sum(rows,r=>r.actual);
     let systemTarget=totalRow&&Number.isFinite(totalRow.target)?totalRow.target:sumTarget;
     let systemActual=totalRow&&Number.isFinite(totalRow.actual)?totalRow.actual:sumActual;
-    let systemCalcPct=systemTarget>0?systemActual/systemTarget*100:0;
-    let systemPct=totalRow&&Number.isFinite(totalRow.pastedCompletion)?totalRow.pastedCompletion:systemCalcPct;
-    let systemDiff=systemPct-timeProgress;
+    let systemCalcPct=roundPct1(systemTarget>0?systemActual/systemTarget*100:0);
+    let systemPct=roundPct1(totalRow&&Number.isFinite(totalRow.pastedCompletion)?totalRow.pastedCompletion:systemCalcPct);
+    let systemDiff=roundPct1(systemPct-timeProgress);
     let systemStatus=statusFromDiff(systemDiff);
     let systemGap=Math.max(0,systemTarget-systemActual);
     let requiredPerDay=systemGap>0&&remainingDays>0?systemGap/remainingDays:0;
     let forecast=currentDay>0?systemActual/currentDay*totalDays:0;
-    let forecastPct=systemTarget>0?forecast/systemTarget*100:0;
+    let forecastPct=roundPct1(systemTarget>0?forecast/systemTarget*100:0);
     let averagePerDay=currentDay>0?systemActual/currentDay:0;
     let expectedByTime=systemTarget*timeProgress/100;
     let scheduleValueDelta=systemActual-expectedByTime;
@@ -280,7 +289,7 @@
     if(totalRow){
       if(Math.abs(totalRow.target-sumTarget)>0.8)issues.push({type:'warn',text:`Tổng TG tháng dán ${fmt1(totalRow.target)} lệch tổng 16 cửa hàng ${fmt1(sumTarget)}.`});
       if(Math.abs(totalRow.actual-sumActual)>0.8)issues.push({type:'warn',text:`Tổng Thực đạt dán ${fmt1(totalRow.actual)} lệch tổng 16 cửa hàng ${fmt1(sumActual)}.`});
-      if(Number.isFinite(totalRow.pastedCompletion)&&Math.abs(totalRow.pastedCompletion-systemCalcPct)>0.6)issues.push({type:'warn',text:`Tổng Hoàn thành TG tháng dán ${fmtPct(totalRow.pastedCompletion)} nhưng Thực đạt/TG tháng = ${fmtPct(systemCalcPct,1)}.`});
+      if(Number.isFinite(totalRow.pastedCompletion)&&Math.abs(totalRow.pastedCompletion-systemCalcPct)>0.6)issues.push({type:'warn',text:`Tổng Hoàn thành TG tháng dán ${fmtPct(totalRow.pastedCompletion,1)} nhưng Thực đạt/TG tháng = ${fmtPct(systemCalcPct,1)}.`});
       if(Number.isFinite(totalRow.pastedNeed)){
         const exp=systemTarget*timeProgress/100;if(Math.abs(totalRow.pastedNeed-exp)>0.8)issues.push({type:'warn',text:`Tổng DS CẦN ĐẠT dán ${fmt1(totalRow.pastedNeed)}; tool tính ${fmt1(exp)}.`});
       }
@@ -295,10 +304,11 @@
     const groups={green:[],blue:[],orange:[],red:[]}; sorted.forEach(r=>groups[r.status.key].push(r));
     const onTrackCount=sorted.filter(r=>r.timeDiff>=0).length;
     const slowCount=sorted.length-onTrackCount;
-    const onTrackPct=sorted.length?onTrackCount/sorted.length*100:0;
-    const slowPct=sorted.length?slowCount/sorted.length*100:0;
+    // Giữ nguyên chỉ số tích cực ĐẠT TIẾN ĐỘ; CHẬM lấy phần bù để tổng luôn 100,0%.
+    const onTrackPct=roundPct1(sorted.length?onTrackCount/sorted.length*100:0);
+    const slowPct=roundPct1(100-onTrackPct);
     const topStore=sorted[0]||null, bottomStore=sorted[sorted.length-1]||null;
-    const topBottomDiff=topStore&&bottomStore?topStore.pct-bottomStore.pct:0;
+    const topBottomDiff=roundPct1(topStore&&bottomStore?topStore.pct-bottomStore.pct:0);
     return {rows,totalRow,issues,targetMonth:reportMonth,reportYear,currentDay,totalDays,remainingDays,updateDate,closingDate,dateSource,timeProgress,systemTarget,systemActual,systemPct,systemCalcPct,systemDiff,systemStatus,systemGap,requiredPerDay,forecast,forecastPct,averagePerDay,expectedByTime,scheduleValueDelta,sorted,top5,groups,onTrackCount,slowCount,onTrackPct,slowPct,topStore,bottomStore,topBottomDiff};
   }
 
@@ -336,7 +346,7 @@
     lines.push(`<div class="ok">✓ Nhận ${m.rows.length} cửa hàng • Target T${m.targetMonth}: ${fmt1(m.systemTarget)}</div>`);
     lines.push(`<div class="ok">✓ Ngày cập nhật: ${dateVN(m.updateDate)} • chốt ${dateVN(m.closingDate)} • ${m.currentDay}/${m.totalDays} ngày</div>`);
     lines.push(`<div class="muted">Nguồn ngày: ${escapeHtml(m.dateSource)}</div>`);
-    lines.push(`<div class="ok">✓ Tiến độ thời gian: ${fmtPct(m.timeProgress,1)} • Hoàn thành hệ thống dùng để so: ${fmtPct(m.systemPct)}</div>`);
+    lines.push(`<div class="ok">✓ Tiến độ thời gian: ${fmtPct(m.timeProgress,1)} • Hoàn thành hệ thống dùng để so: ${fmtPct(m.systemPct,1)}</div>`);
     lines.push(`<div class="ok">✓ GAP KPI: ${fmt1(m.systemGap)} • cần ${fmt1(m.requiredPerDay)}/ngày • forecast ${fmtPct(m.forecastPct,1)}</div>`);
     if(!errs.length&&!warns.length)lines.push(`<div class="ok">✓ Các cột đối chiếu đều khớp trong ngưỡng làm tròn.</div>`);
     if(errs.length||warns.length)lines.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);
@@ -560,7 +570,7 @@
       const ry=startY+i*rowH;if(i>0)line(ctx,lx+18,ry,lx+lw-18,ry,'#dfe2e5',1);
       circle(ctx,rankX,ry+18,13,r.status.color);textMiddle(ctx,i+1,rankX,ry+18.5,14.5,'#fff','700','center');
       fitText(ctx,r.name,nameX,ry+7,nameMaxW,19.5,C.ink,'700','left',16.5);
-      text(ctx,fmtPct(r.pct,0),pctX,ry+7,21,r.status.color,'700','center');
+      text(ctx,fmtPct(r.pct,1),pctX,ry+7,21,r.status.color,'700','center');
       progress(ctx,xBar,ry+13,barW,12,r.pct,r.status.color,m.timeProgress);
       text(ctx,fmtStatusDelta(r.timeDiff),deltaX,ry+9,15.5,r.status.color,'700','center');
       circle(ctx,statusDotX,ry+18,5.5,r.status.color);
@@ -592,7 +602,7 @@
       textMiddle(ctx,i+1,948,yy+14.5,13.5,'#fff','700','center');
       fitText(ctx,r.name,topNameX,yy+3,topNameMaxW,16.5,C.ink,'700');
       progress(ctx,topBarX,yy+10,topBarW,11,r.pct,r.status.color,m.timeProgress);
-      text(ctx,fmtPct(r.pct,0),topPctX,yy+2,18,r.status.color,'700');
+      text(ctx,fmtPct(r.pct,1),topPctX,yy+2,18,r.status.color,'700');
     });
 
     // RIGHT INSIGHTS — dynamic vertical spacing by actual wrapped content.
@@ -653,7 +663,7 @@
     const aux=[
       {label:'ĐẠT TIẾN ĐỘ:',value:`${fmtPct(m.onTrackPct,1)}  •  ${m.onTrackCount}/${m.sorted.length} CH`,color:C.greenDark},
       {label:'CHẬM TIẾN ĐỘ:',value:`${fmtPct(m.slowPct,1)}  •  ${m.slowCount}/${m.sorted.length} CH`,color:C.red},
-      {label:'CHÊNH LỆCH TOP-BOTTOM:',value:`${fmtNum(m.topBottomDiff)} điểm %`,color:C.navy2}
+      {label:'CHÊNH LỆCH TOP-BOTTOM:',value:`${fmt1(m.topBottomDiff)} điểm %`,color:C.navy2}
     ];
     aux.forEach((a,i)=>{
       const sx=auxX+i*(auxSeg+auxGap);
