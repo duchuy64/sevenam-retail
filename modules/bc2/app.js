@@ -65,11 +65,27 @@ function strip(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]
 function clean(s){return String(s??'').replace(/\*\*/g,'').replace(/`/g,'').trim();}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+// Chuẩn % BC2: mọi dữ liệu và kết quả logic chỉ dùng tối đa 1 chữ số sau dấu phẩy.
+function roundPct1(v){
+  const n=Number(v)||0;
+  return Math.round((n+Number.EPSILON)*10)/10;
+}
+// Với hai nhóm bổ sung nhau thành 100%: ưu tiên giữ nhóm tích cực sau khi làm tròn,
+// nhóm tiêu cực lấy phần bù để tổng luôn đúng 100,0%.
+function complementaryPct100(positiveRaw){
+  const positive=clamp(roundPct1(positiveRaw),0,100);
+  const negative=Number((100-positive).toFixed(1));
+  return {positive,negative};
+}
 function daysInMonth(y,m){return new Date(y,m,0).getDate();}
 function dateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function fmtPct(v,d=2){return (Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
-function fmtPct0(v){return Math.round(Number(v)||0).toLocaleString('vi-VN')+'%';}
+function fmtPct(v,d=1){return (Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
+function fmtPctSmart(v){
+  const n=roundPct1(v);
+  // Luôn hiển thị đúng 1 số sau dấu phẩy để các % đồng đều: 40,0% • 50,0% • 68,7%
+  return fmtPct(n,1);
+}
 function parsePct(s){
   const x=clean(s).replace(/\s/g,'');
   const m=x.match(/(-?\d{1,3}(?:[.,]\d{1,3})?)\s*%/);
@@ -136,7 +152,7 @@ function parseData(text){
     const n=strip(line);
     if(n.includes('TONG')){
       let p=parsePct(line); if(!Number.isFinite(p))p=parseLooseNumber(line);
-      if(Number.isFinite(p))total=p;
+      if(Number.isFinite(p))total=roundPct1(p);
       return;
     }
     const store=canonicalFromText(line);
@@ -152,10 +168,11 @@ function parseData(text){
       issues.push({type:'err',text:`Dòng ${idx+1}: nhận ra ${store.code} nhưng không tìm thấy % HTTG.`});
       return;
     }
+    const normalizedPct=roundPct1(p);
     if(found.has(store.code)){
-      issues.push({type:'err',text:`Trùng showroom ${store.code}. Tool đang dùng giá trị xuất hiện sau cùng: ${fmtPct(p)}.`});
+      issues.push({type:'err',text:`Trùng showroom ${store.code}. Tool đang dùng giá trị xuất hiện sau cùng: ${fmtPctSmart(normalizedPct)}.`});
     }
-    found.set(store.code,{...store,pct:p,sourceLine:idx+1});
+    found.set(store.code,{...store,pct:normalizedPct,sourceLine:idx+1});
   });
 
   const missing=FIXED.filter(s=>!found.has(s.code));
@@ -167,23 +184,36 @@ function parseData(text){
   const dc=detectClosingDate(text), closing=dc.date;
   const update=new Date(closing);update.setDate(update.getDate()+1);
   const totalDays=daysInMonth(closing.getFullYear(),closing.getMonth()+1);
-  const day=closing.getDate(),timeProgress=day/totalDays*100;
+  const day=closing.getDate(),timeProgress=roundPct1(day/totalDays*100);
 
   const rows=FIXED.map(s=>{
     const r=found.get(s.code);
-    const pct=r?r.pct:0,diff=pct-timeProgress,st=status(diff);
+    const pct=roundPct1(r?r.pct:0);
+    const diff=roundPct1(pct-timeProgress);
+    const st=status(diff);
     return {...s,pct,diff,status:st,missing:!r};
   });
   const sorted=[...rows].sort((a,b)=>b.pct-a.pct || FIXED.findIndex(x=>x.code===a.code)-FIXED.findIndex(x=>x.code===b.code));
 
   if(!Number.isFinite(total)){
-    total=rows.reduce((a,r)=>a+r.pct,0)/rows.length;
-    issues.push({type:'warn',text:`Không tìm thấy dòng Tổng. Tool tạm dùng trung bình 16 showroom = ${fmtPct(total)}. Nên dán dòng “Tổng” để đúng số hệ thống.`});
+    total=roundPct1(rows.reduce((a,r)=>a+r.pct,0)/rows.length);
+    issues.push({type:'warn',text:`Không tìm thấy dòng Tổng. Tool tạm dùng trung bình 16 showroom = ${fmtPctSmart(total)}. Nên dán dòng “Tổng” để đúng số hệ thống.`});
+  }else{
+    total=roundPct1(total);
   }
 
   const groups={green:[],blue:[],orange:[],red:[]};
   sorted.forEach(r=>groups[r.status.key].push(r));
-  return {rows,sorted,total,groups,issues,closing,update,dateSource:dc.source,totalDays,day,timeProgress};
+
+  // Nhóm tích cực = Kịp + Vượt nhiều. Nhóm tiêu cực = Chậm + Chậm nhiều.
+  // Hai tỷ lệ này luôn bị khóa tổng đúng 100,0%.
+  const onTrackCount=groups.green.length+groups.blue.length;
+  const slowCount=groups.orange.length+groups.red.length;
+  const pctPair=complementaryPct100(onTrackCount/FIXED.length*100);
+  const onTrackPct=pctPair.positive;
+  const slowPct=pctPair.negative;
+
+  return {rows,sorted,total,groups,issues,closing,update,dateSource:dc.source,totalDays,day,timeProgress,onTrackCount,slowCount,onTrackPct,slowPct};
 }
 
 function renderValidation(){
@@ -191,8 +221,9 @@ function renderValidation(){
   const errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn');
   const out=[];
   out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);
-  out.push(`<div class="ok">✓ Tổng hệ thống: ${fmtPct(m.total,2)} • Tiến độ thời gian: ${fmtPct(m.timeProgress,2)}</div>`);
+  out.push(`<div class="ok">✓ Tổng hệ thống: ${fmtPctSmart(m.total)} • Tiến độ thời gian: ${fmtPctSmart(m.timeProgress)}</div>`);
   out.push(`<div class="ok">✓ Chốt: ${dateVN(m.closing)} • Cập nhật: ${dateVN(m.update)}</div>`);
+  out.push(`<div class="ok">✓ Làm tròn và luôn hiển thị 1 số sau dấu phẩy • Kịp/Vượt ${fmtPct(m.onTrackPct,1)} + Chậm ${fmtPct(m.slowPct,1)} = 100,0%</div>`);
   out.push(`<div class="muted">Nguồn ngày: ${esc(m.dateSource)}</div>`);
   if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);
   [...errs,...warns].forEach(x=>out.push(`<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`));
@@ -922,13 +953,13 @@ function drawLeft(ctx,m){
     else{circle(ctx,58,yy+28,17,C.navy2);mid(ctx,i+1,58,yy+28.5,16,'#fff');}
     fitMid(ctx,r.code,119,yy+28,120,24,C.ink,700,'left',20);
     progress(ctx,260,yy+20,302,16,r.pct,r.status.color,m.timeProgress);
-    fitMid(ctx,fmtPct(r.pct,2),665,yy+28,108,28,r.status.color,700,'right',22);
+    fitMid(ctx,fmtPctSmart(r.pct),665,yy+28,108,28,r.status.color,700,'right',22);
   });
 
   const totalY=y+h-57;
   line(ctx,x+4,totalY,x+w-4,totalY,C.navy,3);
   mid(ctx,'Tổng hệ thống',62,totalY+29,26,C.navy,700,'left');
-  fitMid(ctx,fmtPct(m.total,2),658,totalY+29,150,34,C.navy2,700,'right',28);
+  fitMid(ctx,fmtPctSmart(m.total),658,totalY+29,150,34,C.navy2,700,'right',28);
 }
 function drawSystemCard(ctx,m){
   const x=703,y=167,w=475,h=333;
@@ -937,23 +968,23 @@ function drawSystemCard(ctx,m){
   mid(ctx,'TIẾN ĐỘ DOANH SỐ TOÀN HỆ THỐNG',x+w/2,y+28,20,'#fff');
 
   // KPI tổng hệ thống
-  fit(ctx,fmtPct(m.total,2),x+w/2,y+64,w-60,96,C.purple,700,'center',80);
+  fit(ctx,fmtPctSmart(m.total),x+w/2,y+64,w-60,96,C.purple,700,'center',80);
 
   const bx=x+31,bw=w-62;
   // Thanh hoàn thành hệ thống
   mid(ctx,'HOÀN THÀNH HỆ THỐNG',bx,y+174,16.5,C.navy,700,'left');
-  fitMid(ctx,fmtPct(m.total,2),x+w-31,y+174,120,18,C.purple,700,'right',15.5);
+  fitMid(ctx,fmtPctSmart(m.total),x+w-31,y+174,120,18,C.purple,700,'right',15.5);
   progress(ctx,bx,y+191,bw,20,m.total,C.purple2);
 
   // Thanh tiến độ thời gian song song bên dưới
   mid(ctx,'TIẾN ĐỘ THỜI GIAN',bx,y+234,16.5,C.navy,700,'left');
-  fitMid(ctx,`${fmtPct(m.timeProgress,2)}  (${m.day}/${m.totalDays} ngày)`,x+w-31,y+234,215,17,C.blue,700,'right',14);
+  fitMid(ctx,`${fmtPctSmart(m.timeProgress)}  (${m.day}/${m.totalDays} ngày)`,x+w-31,y+234,215,17,C.blue,700,'right',14);
   progress(ctx,bx,y+251,bw,20,m.timeProgress,C.blue);
 
   // Dòng kết luận dưới cùng, không lặp lại số ngày
-  const diff=m.total-m.timeProgress;
-  const diffRounded=Math.round(diff*100)/100;
-  const absDiffText=Math.abs(diffRounded).toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const diff=roundPct1(m.total-m.timeProgress);
+  const diffRounded=diff;
+  const absDiffText=Math.abs(diffRounded).toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});
   let paceText='';
   let paceColor=C.blue;
   if(diffRounded===0){
@@ -991,7 +1022,7 @@ function drawLegend(ctx,m){
 }
 function groupText(arr){
   if(!arr.length)return 'Không có showroom.';
-  return arr.map(r=>`${r.code} (${fmtPct(r.pct,2)})`).join(', ')+'.';
+  return arr.map(r=>`${r.code} (${fmtPctSmart(r.pct)})`).join(', ')+'.';
 }
 function drawComments(ctx,m){
   const x=703,y=794,w=475,h=414;
