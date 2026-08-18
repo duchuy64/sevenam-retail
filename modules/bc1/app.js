@@ -66,6 +66,21 @@ function strip(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]
 function clean(s){return String(s??'').replace(/\*\*/g,'').replace(/__/g,'').replace(/`/g,'').replace(/<[^>]*>/g,'').trim();}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+// Chuẩn % của BC1: toàn bộ dữ liệu và kết quả logic dùng tối đa 1 chữ số sau dấu phẩy.
+function roundPct1(v){
+  const n=Number(v)||0;
+  return Math.round((n+Number.EPSILON)*10)/10;
+}
+// Với 2 tỷ lệ bổ sung nhau thành 100%: ưu tiên giữ tỷ lệ tích cực đã làm tròn,
+// tỷ lệ tiêu cực lấy phần bù để tổng luôn khớp đúng 100,0%.
+function complementaryPct100(positiveRaw){
+  // Khóa cặp % ở độ chính xác 0,1 điểm %.
+  // Ưu tiên giữ nguyên chỉ số tích cực sau khi làm tròn.
+  // Chỉ số tiêu cực luôn lấy phần bù từ 100,0, không làm tròn độc lập.
+  const positive=clamp(roundPct1(positiveRaw),0,100);
+  const negative=Number((100-positive).toFixed(1));
+  return {positive,negative};
+}
 function fmtPct(v,d=1){return (Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
 function fmtPctSmart(v){const n=Number(v)||0;const d=Math.abs(n-Math.round(n))<.045?0:1;return fmtPct(n,d);}
 function fmtNum(v,d=1){return (Number(v)||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d});}
@@ -200,7 +215,7 @@ function parseData(text){
   lines.forEach((line,idx)=>{
     if(isTotalLine(line)){
       const n=extractTotal(line);totalLines++;
-      if(Number.isFinite(n))total=n; else issues.push({type:'err',text:`Dòng ${idx+1}: nhận ra dòng Tổng nhưng không tìm thấy giá trị hoàn thành.`});
+      if(Number.isFinite(n))total=roundPct1(n); else issues.push({type:'err',text:`Dòng ${idx+1}: nhận ra dòng Tổng nhưng không tìm thấy giá trị hoàn thành.`});
       return;
     }
     const store=canonicalFromText(line);if(!store)return;
@@ -208,8 +223,9 @@ function parseData(text){
     if(!Number.isFinite(value)){
       issues.push({type:'err',text:`Dòng ${idx+1}: nhận ra ${store.code} nhưng không tìm thấy % hoàn thành TG ngày.`});return;
     }
-    if(found.has(store.code))issues.push({type:'err',text:`Trùng showroom ${store.code}. Tool đang dùng giá trị xuất hiện sau cùng: ${fmtPctSmart(value)}.`});
-    found.set(store.code,{...store,pct:value,sourceLine:idx+1});
+    const normalizedValue=roundPct1(value);
+    if(found.has(store.code))issues.push({type:'err',text:`Trùng showroom ${store.code}. Tool đang dùng giá trị xuất hiện sau cùng: ${fmtPctSmart(normalizedValue)}.`});
+    found.set(store.code,{...store,pct:normalizedValue,sourceLine:idx+1});
   });
 
   FIXED.filter(s=>!found.has(s.code)).forEach(s=>issues.push({type:'err',text:`Thiếu showroom ${s.code} – ${s.name}.`}));
@@ -223,25 +239,28 @@ function parseData(text){
   if(rt.hour<WORK_START||rt.hour>WORK_START+WORK_TOTAL)issues.push({type:'warn',text:`Mốc ${formatClock(rt.hour)} nằm ngoài khung vận hành 08:00–21:30. Tiến độ thời gian sẽ được giới hạn trong 0–100%.`});
 
   const elapsed=clamp(rt.hour-WORK_START,0,WORK_TOTAL);
-  const timeProgress=elapsed/WORK_TOTAL*100;
+  // Làm tròn tiến độ thời gian ngay tại tầng logic để số hiển thị và phân loại trạng thái luôn khớp nhau.
+  const timeProgress=roundPct1(elapsed/WORK_TOTAL*100);
   const rows=FIXED.map(s=>{
-    const r=found.get(s.code),pct=r?r.pct:0,diff=pct-timeProgress,st=stateFor(pct,timeProgress);
+    const r=found.get(s.code),pct=r?r.pct:0,diff=roundPct1(pct-timeProgress),st=stateFor(pct,timeProgress);
     return {...s,pct,diff,status:st,missing:!r};
   });
   const fixedOrder=new Map(FIXED.map((s,i)=>[s.code,i]));
   const sorted=[...rows].sort((a,b)=>b.pct-a.pct || fixedOrder.get(a.code)-fixedOrder.get(b.code));
   const groups={green:[],blue:[],orange:[],red:[],gray:[]};
   sorted.forEach(r=>groups[r.status.key].push(r));
-  const totalDiff=Number.isFinite(total)?total-timeProgress:0,totalState=stateFor(Number.isFinite(total)?total:0,timeProgress);
+  const totalDiff=Number.isFinite(total)?roundPct1(total-timeProgress):0,totalState=stateFor(Number.isFinite(total)?total:0,timeProgress);
   const achievedCount=groups.green.length+groups.blue.length;
-
-// CHẬM TIẾN ĐỘ = Chậm + Chậm nhiều + Chưa phát sinh
-const slowCount=groups.orange.length+groups.red.length+groups.gray.length;
-
-const zeroCount=groups.gray.length;
-
-const achievedPct=achievedCount/FIXED.length*100;
-const slowPct=slowCount/FIXED.length*100;
+  // Chưa phát sinh vẫn thuộc nhóm CHẬM TIẾN ĐỘ theo quy ước BC1.
+  const slowCount=groups.orange.length+groups.red.length+groups.gray.length;
+  const zeroCount=groups.gray.length;
+  // Hai KPI này phải cộng chính xác 100,0%. Ưu tiên giữ chỉ số tích cực (Đạt),
+  // phần Chậm lấy phần bù. Ví dụ 31,25% / 68,75% => 31,3% / 68,7%, không thành 100,1%.
+  const pctPair=complementaryPct100(achievedCount/FIXED.length*100);
+  const achievedPct=pctPair.positive;
+  // Luôn lấy phần bù trực tiếp từ % ĐẠT đã làm tròn.
+  // Ví dụ 5/16 => 31,3%; phần CHẬM = 100,0 - 31,3 = 68,7%.
+  const slowPct=Number((100-achievedPct).toFixed(1));
 
   return {rows,sorted,total,groups,issues,reportHour:rt.hour,timeSource:rt.source,reportDate:rd.date,dateSource:rd.source,elapsed,timeProgress,totalDiff,totalState,achievedCount,slowCount,zeroCount,achievedPct,slowPct};
 }
@@ -250,6 +269,9 @@ function renderValidation(){
   const m=model,errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn'),out=[];
   out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);
   out.push(`<div class="ok">✓ Mốc báo cáo: ${formatClock(m.reportHour)} • ${fmtNum(m.elapsed,1)}/${fmtNum(WORK_TOTAL,1)} giờ = ${fmtPct(m.timeProgress,1)}</div>`);
+  const validationAchieved=clamp(roundPct1(m.achievedPct),0,100);
+  const validationSlow=Number((100-validationAchieved).toFixed(1));
+  out.push(`<div class="ok">✓ Làm tròn % tối đa 1 số sau dấu phẩy • Đạt ${fmtPct(validationAchieved,1)} + Chậm ${fmtPct(validationSlow,1)} = 100,0%</div>`);
   if(Number.isFinite(m.total))out.push(`<div class="ok">✓ Tổng hệ thống/ngày: ${fmtPctSmart(m.total)} • Chênh lệch: ${m.totalDiff>=0?'+':''}${fmtPct(m.totalDiff,1)}</div>`);
   out.push(`<div class="muted">Nguồn giờ: ${esc(m.timeSource)} • Ngày: ${dateVN(m.reportDate)} (${esc(m.dateSource)})</div>`);
   if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);
@@ -653,17 +675,22 @@ function drawStoreMetrics(ctx,m){
 
   rr(ctx,x1,y,w,h,9,'#f4fff0',C.green,1.9);
   drawCheck(ctx,x1+48,y+52,49,C.green);
+  // Khóa hiển thị cặp ĐẠT + CHẬM = đúng 100,0% ngay tại Canvas.
+  // Không dùng % CHẬM làm tròn độc lập để tránh 31,3% + 68,8% = 100,1%.
+  const achievedPctDisplay=clamp(roundPct1(m.achievedPct),0,100);
+  const slowPctDisplay=Number((100-achievedPctDisplay).toFixed(1));
+
   fitMid(ctx,'CỬA HÀNG ĐẠT TIẾN ĐỘ',x1+90,y+22,w-105,18,C.navy,700,'left',15);
   fitMid(ctx,`${m.achievedCount}/16`,x1+91,y+58,145,37,C.greenDark,700,'left',31);
-  fitMid(ctx,fmtPct(m.achievedPct,1),x1+w-24,y+58,145,37,C.greenDark,700,'right',31);
+  fitMid(ctx,fmtPct(achievedPctDisplay,1),x1+w-24,y+58,145,37,C.greenDark,700,'right',31);
   fitMid(ctx,'Kịp + Vượt nhiều',x1+91,y+88,w-115,14,C.muted,700,'left',12);
 
   rr(ctx,x2,y,w,h,9,'#fff4f2',C.red,1.9);
   drawWarning(ctx,x2+48,y+52,45,C.red);
   fitMid(ctx,'CỬA HÀNG CHẬM TIẾN ĐỘ',x2+90,y+22,w-105,18,C.navy,700,'left',15);
   fitMid(ctx,`${m.slowCount}/16`,x2+91,y+58,145,37,C.red,700,'left',31);
-  fitMid(ctx,fmtPct(m.slowPct,1),x2+w-24,y+58,145,37,C.red,700,'right',31);
-  fitMid(ctx,'Chậm + Chậm nhiều',x2+91,y+88,w-115,14,C.muted,700,'left',12);
+  fitMid(ctx,fmtPct(slowPctDisplay,1),x2+w-24,y+58,145,37,C.red,700,'right',31);
+  fitMid(ctx,'Chậm + Chậm nhiều + Chưa phát sinh',x2+91,y+88,w-115,14,C.muted,700,'left',11.4);
 }
 function thresholdText(key){
   if(key==='green')return '> +10 điểm %';
