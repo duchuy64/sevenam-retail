@@ -61,8 +61,10 @@ function daysInMonth(y,m){return new Date(y,m,0).getDate();}
 function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function dateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function fmt(v,d=0){return Number(v||0).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d});}
+// Chuẩn BC1–BC4: mọi % động dùng tối đa 1 chữ số sau dấu phẩy ngay từ tầng tính toán.
+function round1(v){return Math.round((Number(v)||0)*10)/10;}
 function fmtSmart(v){const n=Number(v||0);return n.toLocaleString('vi-VN',{maximumFractionDigits:Number.isInteger(n)?0:2});}
-function pct(v,d=1){return fmt(v,d)+'%';}
+function pct(v,d=1){return fmt(v,d)+'%';} // số tròn vẫn hiện 40,0% khi d=1
 function signed(v,d=1){const n=Number(v||0);return `${n>0?'+':''}${fmt(n,d)}`;}
 function shortageText(actual,target){
   const balance=Number(target||0)-Number(actual||0);
@@ -142,11 +144,11 @@ function parseData(text){
   FIXED.filter(s=>!found.has(s.code)).forEach(s=>issues.push({type:'err',text:`Thiếu showroom ${s.code} – ${s.name}.`}));
   if(found.size!==16)issues.push({type:'err',text:`Tool cố định 16 showroom nhưng hiện đọc được ${found.size}/16.`});
 
-  const dates=getClosingDate(),reportDate=dates.report,closing=dates.closing,totalDays=daysInMonth(closing.getFullYear(),closing.getMonth()+1),day=closing.getDate(),daysLeft=Math.max(0,totalDays-day),timeProgress=day/totalDays*100;
+  const dates=getClosingDate(),reportDate=dates.report,closing=dates.closing,totalDays=daysInMonth(closing.getFullYear(),closing.getMonth()+1),day=closing.getDate(),daysLeft=Math.max(0,totalDays-day),timeProgress=round1(day/totalDays*100);
   const rows=FIXED.map(s=>{
     const f=found.get(s.code)||{actual:0,target:0};
-    const complete=f.target>0?f.actual/f.target*100:0;
-    const diff=complete-timeProgress;
+    const complete=round1(f.target>0?f.actual/f.target*100:0);
+    const diff=round1(complete-timeProgress);
     const remaining=Math.max(f.target-f.actual,0);
     const needPerDay=remaining===0?0:(daysLeft>0?remaining/daysLeft:remaining);
 
@@ -163,8 +165,8 @@ function parseData(text){
     return {...s,name:(f.name||s.code),actual:f.actual,target:f.target,complete,diff,remaining,needPerDay,todayNeed,currentPace,paceGap,status:st,missing:!found.has(s.code)};
   });
   const sorted=[...rows].sort((a,b)=>b.complete-a.complete||b.actual-a.actual||FIXED.findIndex(x=>x.code===a.code)-FIXED.findIndex(x=>x.code===b.code));
-  const totalActual=rows.reduce((a,r)=>a+r.actual,0),totalTarget=rows.reduce((a,r)=>a+r.target,0),totalComplete=totalTarget?totalActual/totalTarget*100:0,totalDiff=totalComplete-timeProgress,totalRemaining=Math.max(totalTarget-totalActual,0),totalNeedPerDay=totalRemaining===0?0:(daysLeft>0?totalRemaining/daysLeft:totalRemaining),totalTodayNeed=totalRemaining===0?0:(daysLeft>0?Math.ceil(totalRemaining/daysLeft):0),totalState=stateFor(totalActual,totalComplete,timeProgress);
-  const forecastUnits=day>0?(totalActual/day*totalDays):0,forecastPct=totalTarget?forecastUnits/totalTarget*100:0;
+  const totalActual=rows.reduce((a,r)=>a+r.actual,0),totalTarget=rows.reduce((a,r)=>a+r.target,0),totalComplete=round1(totalTarget?totalActual/totalTarget*100:0),totalDiff=round1(totalComplete-timeProgress),totalRemaining=Math.max(totalTarget-totalActual,0),totalNeedPerDay=totalRemaining===0?0:(daysLeft>0?totalRemaining/daysLeft:totalRemaining),totalTodayNeed=totalRemaining===0?0:(daysLeft>0?Math.ceil(totalRemaining/daysLeft):0),totalState=stateFor(totalActual,totalComplete,timeProgress);
+  const forecastUnits=day>0?(totalActual/day*totalDays):0,forecastPct=round1(totalTarget?forecastUnits/totalTarget*100:0);
   const groups={green:[],blue:[],orange:[],red:[],gray:[]};sorted.forEach(r=>groups[r.status.key].push(r));
   const priority=sorted.filter(r=>['orange','red','gray'].includes(r.status.key)).sort((a,b)=>b.paceGap-a.paceGap||a.diff-b.diff).slice(0,4);
 
@@ -174,7 +176,7 @@ function parseData(text){
   return {rows,sorted,groups,priority,issues,reportDate,closing,totalDays,day,daysLeft,timeProgress,totalActual,totalTarget,totalComplete,totalDiff,totalRemaining,totalNeedPerDay,totalTodayNeed,totalState,forecastUnits,forecastPct};
 }
 
-function renderValidation(){const m=model,errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn'),out=[];out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);out.push(`<div class="ok">✓ Tổng: ${fmtSmart(m.totalActual)} / ${fmtSmart(m.totalTarget)} túi = ${pct(m.totalComplete,1)}</div>`);out.push(`<div class="ok">✓ Cập nhật: ${dateVN(m.reportDate)} • Chốt hết ngày: ${dateVN(m.closing)} • Tiến độ TG: ${pct(m.timeProgress,1)} • Còn ${m.daysLeft} ngày</div>`);out.push(`<div class="ok">✓ Cần TB: ${fmt(m.totalNeedPerDay,1)} túi/ngày • Hôm nay cần bán: ${fmtSmart(m.totalTodayNeed)} túi • Forecast: ${pct(m.forecastPct,0)}</div>`);if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);[...errs,...warns].forEach(x=>out.push(`<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`));if(!errs.length&&!warns.length)out.push('<div class="ok">✓ Dữ liệu hợp lệ, có thể xuất ảnh.</div>');els.validation.innerHTML=out.join('');els.meta.textContent=`16 showroom • ${errs.length} lỗi • ${warns.length} cảnh báo`;els.export2k.disabled=errs.length>0;els.export4k.disabled=errs.length>0;}
+function renderValidation(){const m=model,errs=m.issues.filter(x=>x.type==='err'),warns=m.issues.filter(x=>x.type==='warn'),out=[];out.push(`<div class="ok">✓ Đọc ${m.rows.filter(x=>!x.missing).length}/16 showroom cố định</div>`);out.push(`<div class="ok">✓ Tổng: ${fmtSmart(m.totalActual)} / ${fmtSmart(m.totalTarget)} túi = ${pct(m.totalComplete,1)}</div>`);out.push(`<div class="ok">✓ Cập nhật: ${dateVN(m.reportDate)} • Chốt hết ngày: ${dateVN(m.closing)} • Tiến độ TG: ${pct(m.timeProgress,1)} • Còn ${m.daysLeft} ngày</div>`);out.push(`<div class="ok">✓ Cần TB: ${fmt(m.totalNeedPerDay,1)} túi/ngày • Hôm nay cần bán: ${fmtSmart(m.totalTodayNeed)} túi • Forecast: ${pct(m.forecastPct,1)}</div>`);if(errs.length||warns.length)out.push(`<div class="section">${errs.length} lỗi • ${warns.length} cảnh báo</div>`);[...errs,...warns].forEach(x=>out.push(`<div class="${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`));if(!errs.length&&!warns.length)out.push('<div class="ok">✓ Dữ liệu hợp lệ, có thể xuất ảnh.</div>');els.validation.innerHTML=out.join('');els.meta.textContent=`16 showroom • ${errs.length} lỗi • ${warns.length} cảnh báo`;els.export2k.disabled=errs.length>0;els.export4k.disabled=errs.length>0;}
 function showIssues(){const errs=model.issues.filter(x=>x.type==='err'),warns=model.issues.filter(x=>x.type==='warn');if(!errs.length&&!warns.length)return;els.modalBadge.textContent=errs.length?'PHÁT HIỆN LỖI':'CÓ CẢNH BÁO';els.modalTitle.textContent=errs.length?'Dữ liệu chưa đủ để xuất ảnh':'Có dữ liệu cần kiểm tra';els.modalSummary.textContent=`${errs.length} lỗi • ${warns.length} cảnh báo.`;els.modalIssues.innerHTML=[...errs,...warns].map(x=>`<div class="issue ${x.type}">${x.type==='err'?'✕':'⚠'} ${esc(x.text)}</div>`).join('');els.modal.classList.add('show');}
 function closeModal(){els.modal.classList.remove('show');}
 function toast(s){els.toast.textContent=s;els.toast.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove('show'),1700);}
@@ -340,7 +342,7 @@ function drawTable(ctx,m){
     if(i)line(ctx,x+6,yy,x+w-6,yy,'#e5e8ec',1);
     if(i<3)medal(ctx,(edges[0]+edges[1])/2,cy,i+1);else mid(ctx,i+1,(edges[0]+edges[1])/2,cy,16,C.navy,700);
     fitMid(ctx,r.name,edges[1]+13,cy,widths[1]-24,17.2,C.ink,700,'left',11.5);
-    fitMid(ctx,pct(r.complete,0),(edges[2]+edges[3])/2,cy,widths[2]-8,19,C.navy,700,'center',13);
+    fitMid(ctx,pct(r.complete,1),(edges[2]+edges[3])/2,cy,widths[2]-8,19,C.navy,700,'center',13);
     progress(ctx,edges[3]+14,cy-6.5,widths[3]-28,13,r.complete,r.status.color,m.timeProgress);
 
     // +/- TG luôn kèm ký hiệu %.
@@ -405,7 +407,7 @@ function drawForecast(ctx,m){
   const col=forecastColor(m.forecastPct);
   // Gauge bán nguyệt thu nhỏ để panel gọn và cân đối hơn.
   drawGauge(ctx,x+w/2,y+143,76,m.forecastPct,col,19);
-  fitMid(ctx,pct(m.forecastPct,0),x+w/2,y+141,154,45,col,700,'center',32);
+  fitMid(ctx,pct(m.forecastPct,1),x+w/2,y+141,154,45,col,700,'center',32);
   fitMid(ctx,'Khả năng đạt KPI',x+22,y+181,148,14.5,C.navy,700,'left',11);
   rr(ctx,x+w-78,y+165,64,30,5,col);fitMid(ctx,forecastLabel(m.forecastPct),x+w-46,y+180,58,12.5,'#fff',700,'center',9);
 }
@@ -434,7 +436,7 @@ function drawActions(ctx,m){
     {title:`${slow} cửa hàng`,action:'Tăng tốc bán túi ngay hôm nay',color:C.orange,icon:iconChart},
     {title:`${critical} cửa hàng`,action:'Ưu tiên kéo doanh số ngay',color:C.red,icon:iconAlert},
     {title:`${fmt(m.totalNeedPerDay,1)} túi/ngày`,action:'Bám tối thiểu mỗi ngày',color:C.teal,icon:iconBag},
-    {title:`${pct(m.forecastPct,0)}`,action:'Theo sát forecast cuối tháng',color:forecastColor(m.forecastPct),icon:iconTarget}
+    {title:`${pct(m.forecastPct,1)}`,action:'Theo sát forecast cuối tháng',color:forecastColor(m.forecastPct),icon:iconTarget}
   ];
   const iw=(w-180)/5;
   items.forEach((it,i)=>{
