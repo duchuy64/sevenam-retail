@@ -1,0 +1,17 @@
+SEVEN.AM – CÁCH UP LÊN GITHUB PAGES
+
+1) Tạo repository mới trên GitHub.
+2) Upload TOÀN BỘ file/thư mục trong bộ này lên nhánh main.
+3) Settings > Pages.
+4) Build and deployment: Deploy from a branch.
+5) Branch: main / (root) > Save.
+6) Mở link GitHub Pages được cấp.
+
+Tab trực tiếp:
+#bc1 = Doanh số theo khung giờ
+#bc2 = BXH doanh số showroom
+#bc3 = KPI hệ thống bán lẻ
+#bc4 = BXH bán túi
+#bc5 = Dashboard điều hành hệ thống bán lẻ
+
+LƯU Ý: GitHub Pages không phải cơ chế bảo mật nội bộ. Nếu repo/site công khai, người có URL có thể truy cập giao diện.

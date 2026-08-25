@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seven.AM – BXH Doanh số ngày 16 Showroom</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <div class="brand">
+      <div class="eyebrow">SEVEN.AM INTERNAL TOOL</div>
+      <h1>BXH Doanh số ngày</h1>
+      <p>16 showroom cố định • so tiến độ doanh số ngày với tiến độ thời gian trong ngày • tự nhận mốc giờ.</p>
+    </div>
+
+    <section class="card">
+      <h2>1. Dán dữ liệu</h2>
+      <p class="help">Dán trực tiếp từ Excel / Google Sheets / bảng Markdown. Tool tự dò mã showroom và giá trị hoàn thành, kể cả khi thiếu dấu % hoặc tên cột viết hơi khác.</p>
+      <textarea id="dataInput" spellcheck="false"></textarea>
+      <div class="actions">
+        <button id="parseBtn" class="btn primary">Phân tích & tạo BXH</button>
+        <button id="sampleBtn" class="btn secondary">Dữ liệu mẫu</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Mốc thời gian báo cáo</h2>
+      <label for="timeOverride">Mốc giờ thủ công (tùy chọn)</label>
+      <input id="timeOverride" type="text" inputmode="decimal" placeholder="Ví dụ: 17 hoặc 17:30">
+      <p class="help">Để trống: tool tự đọc dòng “Khung giờ”. Quy ước ngày làm việc 08:00–21:30 = 13,5 giờ. Mốc chuẩn: 12h = 4/13,5; 17h = 9/13,5; 19h = 11/13,5.</p>
+
+      <label for="reportDate" class="mt">Ngày báo cáo (tùy chọn)</label>
+      <input id="reportDate" type="date">
+      <p class="help">Nếu không nhập và dữ liệu không có ngày, tool dùng ngày hiện tại trên máy.</p>
+    </section>
+
+    <section class="card export-card">
+      <h2>3. Xuất ảnh</h2>
+      <div class="export-grid">
+        <button id="export2k" class="btn export" disabled>
+          <strong>PNG 2K</strong><small>2046 × 3074 px</small>
+        </button>
+        <button id="export4k" class="btn export blue" disabled>
+          <strong>PNG 4K</strong><small>4092 × 6148 px</small>
+        </button>
+      </div>
+      <p class="help center">Render trực tiếp từ Canvas ở độ phân giải đích.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Kiểm tra dữ liệu</h2>
+      <div id="validation" class="validation"></div>
+    </section>
+
+    <section class="card rules">
+      <h2>Quy ước trạng thái</h2>
+      <div><span class="dot green"></span><b>Vượt nhiều:</b> cao hơn tiến độ thời gian &gt; 10 điểm %</div>
+      <div><span class="dot blue"></span><b>Kịp:</b> từ tiến độ thời gian đến +10 điểm %</div>
+      <div><span class="dot orange"></span><b>Chậm:</b> thấp hơn tiến độ thời gian đến 10 điểm %</div>
+      <div><span class="dot red"></span><b>Chậm nhiều:</b> thấp hơn tiến độ thời gian &gt; 10 điểm %</div>
+      <div><span class="dot gray"></span><b>Chưa phát sinh doanh thu:</b> 0%</div>
+    </section>
+
+    <div class="foot">Dùng nội bộ • dữ liệu chỉ lưu trên trình duyệt</div>
+  </aside>
+
+  <main class="preview">
+    <div class="topbar">
+      <div><b>Dashboard Preview</b><span>1023 × 1537 logic • bố cục dọc theo mẫu</span></div>
+      <div id="meta"></div>
+    </div>
+    <div id="scroll" class="scroll">
+      <div id="canvasWrap" class="canvas-wrap">
+        <canvas id="canvas" width="1023" height="1537"></canvas>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div id="modalBadge" class="badge">CẦN KIỂM TRA</div>
+        <h3 id="modalTitle">Kiểm tra dữ liệu</h3>
+      </div>
+      <button id="modalClose" class="close" aria-label="Đóng">×</button>
+    </div>
+    <div id="modalSummary" class="modal-summary"></div>
+    <div id="modalIssues" class="modal-issues"></div>
+    <button id="modalOk" class="btn primary full">Đã hiểu</button>
+  </div>
+</div>
+
+<script src="app.js?v=daily-v9-equal-columns-orange-hour"></script>
+</body>
+</html>

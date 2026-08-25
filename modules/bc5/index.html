@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#07113f">
+  <title>Seven.AM • Dashboard Điều Hành Hệ Thống Bán Lẻ</title>
+  <link rel="stylesheet" href="styles.css?v=6.0.0">
+</head>
+<body>
+  <header class="app-head">
+    <div>
+      <div class="eyebrow">SEVEN.AM • INTERNAL REPORTING TOOL</div>
+      <h1>Dashboard Điều Hành Hệ Thống Bán Lẻ</h1>
+      <p>Dán dữ liệu gốc theo mẫu Excel • Tool tự tính KPI, Top/Bottom, AOV, tỷ lệ chốt, tăng trưởng và insight</p>
+    </div>
+    <span class="internal">DÙNG NỘI BỘ</span>
+  </header>
+
+  <main class="layout">
+    <aside class="input-panel">
+      <div class="panel-title"><span>1</span> DỮ LIỆU ĐẦU VÀO</div>
+      <p class="hint">Copy vùng dữ liệu trong file Excel mẫu rồi dán vào đây. Tên SR nhập thế nào sẽ hiển thị như vậy.</p>
+      <div class="unit-note"><b>ĐƠN VỊ TIỀN MẶC ĐỊNH: NGHÌN ĐỒNG</b><br>1 triệu đồng = 1.000 • 1 tỷ đồng = 1.000.000<br>Cũng có thể đặt header <b>Doanh thu (đồng)</b>; tool sẽ tự chia 1.000 và báo trong phần kiểm tra dữ liệu.</div>
+      <textarea id="dataInput" spellcheck="false" placeholder="Dán dữ liệu Excel tại đây..."></textarea>
+
+      <div class="button-grid">
+        <button id="parseBtn" class="primary">Đối chiếu & tạo Dashboard</button>
+        <button id="sampleBtn">Dữ liệu mẫu</button>
+      </div>
+      <a class="excel-link" href="Mau_Input_Dashboard_Dieu_Hanh_He_Thong.xlsx" download>Tải file Excel mẫu input</a>
+
+      <div class="manager-upload-title">ẢNH ĐIỂM SÁNG QUẢN TRỊ</div>
+      <div class="manager-upload-grid">
+        <div class="manager-upload-card">
+          <div class="manager-thumb"><img id="managerPreview1" alt="Ảnh quản lý 1" hidden><span id="managerEmpty1">QL 1</span></div>
+          <div class="manager-upload-actions">
+            <label class="manager-file-btn"><span id="managerChooseText1">Chọn ảnh</span><input id="managerImage1" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+            <button id="managerClear1" type="button" class="manager-clear" disabled>Xóa ảnh</button>
+            <div class="manager-adjust"><label>Zoom <b id="managerZoomValue1">1.15×</b></label><input id="managerZoom1" type="range" min="1" max="2" step="0.05" value="1.15"></div>
+            <div class="manager-adjust"><label>Vị trí dọc <b id="managerYValue1">0 px</b></label><input id="managerY1" type="range" min="-100" max="100" step="2" value="0"></div>
+          </div>
+        </div>
+        <div class="manager-upload-card">
+          <div class="manager-thumb"><img id="managerPreview2" alt="Ảnh quản lý 2" hidden><span id="managerEmpty2">QL 2</span></div>
+          <div class="manager-upload-actions">
+            <label class="manager-file-btn"><span id="managerChooseText2">Chọn ảnh</span><input id="managerImage2" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+            <button id="managerClear2" type="button" class="manager-clear" disabled>Xóa ảnh</button>
+            <div class="manager-adjust"><label>Zoom <b id="managerZoomValue2">1.15×</b></label><input id="managerZoom2" type="range" min="1" max="2" step="0.05" value="1.15"></div>
+            <div class="manager-adjust"><label>Vị trí dọc <b id="managerYValue2">0 px</b></label><input id="managerY2" type="range" min="-100" max="100" step="2" value="0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="manager-upload-note">Ảnh được chèn trực tiếp vào Canvas và có trong file PNG xuất. Có thể chỉnh Zoom/Vị trí dọc để crop đồng nhất. Không upload thì dùng ảnh mẫu hoặc avatar mặc định.</div>
+
+      <div class="panel-title second"><span>2</span> KIỂM TRA DỮ LIỆU</div>
+      <div id="validationBox" class="validation"></div>
+
+      <div class="panel-title second"><span>3</span> XUẤT DASHBOARD</div>
+      <div class="export-grid">
+        <button id="export2kBtn" class="export">Xuất PNG 2K<small>2048 × 1365</small></button>
+        <button id="export4kBtn" class="export">Xuất PNG 4K<small>4096 × 2731</small></button>
+      </div>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-head">
+        <div>
+          <strong>PREVIEW DASHBOARD</strong>
+          <span id="previewMeta">Chưa có dữ liệu</span>
+        </div>
+        <span>1536 × 1024 • Tỷ lệ 3:2</span>
+      </div>
+      <div id="previewScroll" class="preview-scroll">
+        <div id="canvasWrap" class="canvas-wrap">
+          <canvas id="previewCanvas" width="1536" height="1024"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js?v=6.0.0"></script>
+</body>
+</html>
