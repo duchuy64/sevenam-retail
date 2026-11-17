@@ -587,6 +587,19 @@
     });
     const axisY=876;[0,25,50,75,100].forEach(v=>{const x=xBar+barW*v/100;text(ctx,`${v}%`,x,axisY,13.2,C.ink,'700','center');});
 
+    // TOTAL GAP — ngay bên phải mốc 100% ở cuối bảng, đơn vị TRIỆU.
+    // Chênh lệch doanh thu toàn hệ thống so với tiến độ THỰC TẾ:
+    // Tổng thực đạt − (Tổng KPI tháng × tỷ lệ thời gian đã trôi qua).
+    // Màu xác định lại từ TỔNG THỰC ĐẠT / TỔNG TARGET (không dùng % dán từ nguồn).
+    const totalGapAmount=Math.abs(m.scheduleValueDelta)<0.05?0:m.scheduleValueDelta;
+    const actualTotalPct=roundPct1(m.systemTarget>0?m.systemActual/m.systemTarget*100:0);
+    const totalTimeDiff=roundPct1(actualTotalPct-m.timeProgress);
+    const totalGapColor=statusFromDiff(totalTimeDiff).color;
+    const totalGapText=`${totalGapAmount>0?'+':totalGapAmount<0?'−':''}${fmt1(Math.abs(totalGapAmount))} tr`;
+    const totalGapLabelX=xBar+barW+30;
+    text(ctx,'TỔNG:',gapX-60,axisY,14.4,C.ink,'700','center');
+fitText(ctx,totalGapText,gapX,axisY,82,14.6,totalGapColor,'700','center',13.5);
+
     // RIGHT TOP 5
     const rx=912,rw=601;shadowCard(ctx,rx,241,rw,208,10);ctx.fillStyle=gradient(ctx,rx,241,rw,44,'#0b437e','#0c3b70');ctx.beginPath();ctx.roundRect(rx,241,rw,44,[10,10,0,0]);ctx.fill();drawAssetIcon(ctx,'trophy',949,263,46);text(ctx,'TOP 5 CỬA HÀNG DẪN ĐẦU',982,250,20,'#fff','700');
 
