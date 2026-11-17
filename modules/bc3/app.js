@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'sevenam-retail-kpi-dashboard-v16';
+  const STORAGE_KEY = 'sevenam-retail-kpi-dashboard-v17-gap';
   const BASE = { w:1536, h:1024 };
   const EXPORT_2K = { w:2046, h:1364, tag:'2K' }; // exact 3:2
   const EXPORT_4K = { w:4092, h:2728, tag:'4K' }; // exact 2x of 2K, preserves 3:2
@@ -71,7 +71,7 @@
     'vt':'Việt Trì','viet tri':'Việt Trì'
   };
 
-  const SAMPLE = `STT\tSR\tTG T8\tThực đạt\tDS CẦN ĐẠT\tThừa thiếu\tTarget cần chạy 1 ngày\tHoàn thành TG tháng
+  const SAMPLE = `STT\tSR\tTG T11\tThực đạt\tDS CẦN ĐẠT\tThừa thiếu\tTarget cần chạy 1 ngày\tHoàn thành TG tháng
 1\tHĐ\t1.050\t416,2\t406,5\t9,8\t33,4\t40%
 2\tTĐT\t600\t300,0\t232,3\t67,7\t15,8\t50%
 3\tTB\t500\t254,2\t193,5\t60,6\t12,9\t51%
@@ -261,7 +261,7 @@
       r.pct=roundPct1(Number.isFinite(r.pastedCompletion)?r.pastedCompletion:r.calcCompletion); // requested source for schedule comparison
       r.timeDiff=roundPct1(r.pct-timeProgress);
       r.status=statusFromDiff(r.timeDiff);
-      r.expectedNeed=r.target*timeProgress/100;
+      r.expectedNeed=r.target*currentDay/totalDays;
       r.surplusVsSchedule=r.actual-r.expectedNeed;
       r.gapToKpi=r.target-r.actual;
       r.requiredPerDay=r.gapToKpi>0&&remainingDays>0?r.gapToKpi/remainingDays:0;
@@ -283,7 +283,7 @@
     let forecast=currentDay>0?systemActual/currentDay*totalDays:0;
     let forecastPct=roundPct1(systemTarget>0?forecast/systemTarget*100:0);
     let averagePerDay=currentDay>0?systemActual/currentDay:0;
-    let expectedByTime=systemTarget*timeProgress/100;
+    let expectedByTime=systemTarget*currentDay/totalDays;
     let scheduleValueDelta=systemActual-expectedByTime;
 
     if(totalRow){
@@ -291,10 +291,10 @@
       if(Math.abs(totalRow.actual-sumActual)>0.8)issues.push({type:'warn',text:`Tổng Thực đạt dán ${fmt1(totalRow.actual)} lệch tổng 16 cửa hàng ${fmt1(sumActual)}.`});
       if(Number.isFinite(totalRow.pastedCompletion)&&Math.abs(totalRow.pastedCompletion-systemCalcPct)>0.6)issues.push({type:'warn',text:`Tổng Hoàn thành TG tháng dán ${fmtPct(totalRow.pastedCompletion,1)} nhưng Thực đạt/TG tháng = ${fmtPct(systemCalcPct,1)}.`});
       if(Number.isFinite(totalRow.pastedNeed)){
-        const exp=systemTarget*timeProgress/100;if(Math.abs(totalRow.pastedNeed-exp)>0.8)issues.push({type:'warn',text:`Tổng DS CẦN ĐẠT dán ${fmt1(totalRow.pastedNeed)}; tool tính ${fmt1(exp)}.`});
+        const exp=systemTarget*currentDay/totalDays;if(Math.abs(totalRow.pastedNeed-exp)>0.8)issues.push({type:'warn',text:`Tổng DS CẦN ĐẠT dán ${fmt1(totalRow.pastedNeed)}; tool tính ${fmt1(exp)}.`});
       }
       if(Number.isFinite(totalRow.pastedSurplus)){
-        const exp=systemActual-systemTarget*timeProgress/100;if(Math.abs(totalRow.pastedSurplus-exp)>0.8)issues.push({type:'warn',text:`Tổng Thừa thiếu dán ${fmt1(totalRow.pastedSurplus)}; tool tính ${fmt1(exp)}.`});
+        const exp=systemActual-systemTarget*currentDay/totalDays;if(Math.abs(totalRow.pastedSurplus-exp)>0.8)issues.push({type:'warn',text:`Tổng Thừa thiếu dán ${fmt1(totalRow.pastedSurplus)}; tool tính ${fmt1(exp)}.`});
       }
       if(Number.isFinite(totalRow.pastedPerDay)&&Math.abs(totalRow.pastedPerDay-requiredPerDay)>0.8)issues.push({type:'warn',text:`Tổng Target/ngày dán ${fmt1(totalRow.pastedPerDay)}; tool tính ${fmt1(requiredPerDay)}.`});
     }
@@ -322,7 +322,7 @@
   function run(show=true){
     try{
       model=parsePastedData(els.dataInput.value);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({data:els.dataInput.value,date:els.dateOverride.value}));
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify({data:els.dataInput.value,date:els.dateOverride.value}));}catch(_){}
       renderValidation();
       renderPreview();
       if(show){
@@ -533,9 +533,10 @@
     const rankX=56;
     // Nới khoảng cách mặc định XH → Tên CH để bảng thoáng hơn.
     const nameX=110;
-    const deltaX=704;
-    const statusDotX=772;
-    const statusTextX=784;
+    const deltaX=652;
+    const gapX=750;
+    const statusDotX=801;
+    const statusTextX=813;
 
     // Đo tên dài nhất theo đúng font đang hiển thị.
     // Tên viết tắt => cột tên vẫn gọn nhưng có khoảng thở rõ giữa XH / Tên / %.
@@ -551,19 +552,21 @@
     const nameColW=clamp(longestStoreNamePx+20,80,178);
     const pctX=nameX+nameColW+24;
     const xBar=pctX+40;
-    const barRight=deltaX-42;
-    const barW=Math.max(285,barRight-xBar);
+    const barRight=deltaX-37;
+    const barW=Math.max(238,barRight-xBar);
     const barCenter=xBar+barW/2;
     const nameMaxW=Math.max(70,pctX-nameX-32);
 
-    // Column order: STT | Cửa hàng | % | Tiến độ | +/- TG | Trạng thái.
+    // Column order: STT | Cửa hàng | % | Tiến độ | +/- TG | GAP (triệu) | Trạng thái.
     text(ctx,'STT',rankX,257,15.5,'#fff','700','center');
     text(ctx,'CỬA HÀNG',nameX,257,15.5,'#fff','700');
     text(ctx,'%',pctX,257,16,'#fff','700','center');
     text(ctx,'TIẾN ĐỘ',barCenter,249,14.5,'#fff','700','center');
     text(ctx,'THỰC ĐẠT / TARGET THÁNG',barCenter,269,11.5,'#dbe9f7','700','center');
-    text(ctx,'+/- TG',deltaX,257,14.5,'#fff','700','center');
-    text(ctx,'TRẠNG THÁI',824,257,14.5,'#fff','700','center');
+    text(ctx,'+/- TG',deltaX,257,14,'#fff','700','center');
+    text(ctx,'GAP',gapX,249,14.5,'#fff','700','center');
+    text(ctx,'(TRIỆU)',gapX,267,11,'#dbe9f7','700','center');
+    text(ctx,'TRẠNG THÁI',849,257,12.8,'#fff','700','center');
 
     const rowH=35.6, startY=289;
     m.sorted.forEach((r,i)=>{
@@ -572,9 +575,15 @@
       fitText(ctx,r.name,nameX,ry+7,nameMaxW,19.5,C.ink,'700','left',16.5);
       text(ctx,fmtPct(r.pct,1),pctX,ry+7,21,r.status.color,'700','center');
       progress(ctx,xBar,ry+13,barW,12,r.pct,r.status.color,m.timeProgress);
-      text(ctx,fmtStatusDelta(r.timeDiff),deltaX,ry+9,15.5,r.status.color,'700','center');
+      text(ctx,fmtStatusDelta(r.timeDiff),deltaX,ry+9,14.5,r.status.color,'700','center');
+      // GAP theo doanh thu thực tế so với doanh thu phải đạt ở đúng ngày chốt.
+      // Màu GAP luôn khớp màu trạng thái của chính dòng (đỏ/cam/xanh dương/xanh lá).
+      // Đơn vị triệu, có dấu +/- và làm tròn đúng một chữ số sau dấu phẩy.
+      const gapValue=Math.abs(r.surplusVsSchedule)<0.05?0:r.surplusVsSchedule;
+      const gapLabel=`${gapValue>0?'+':gapValue<0?'−':''}${fmt1(Math.abs(gapValue))}`;
+      fitText(ctx,gapLabel,gapX,ry+9,82,14.6,r.status.color,'700','center',12.5);
       circle(ctx,statusDotX,ry+18,5.5,r.status.color);
-      fitTextMiddle(ctx,r.status.label,statusTextX,ry+18.5,104,13.8,r.status.color,'700','left',12.2);
+      fitTextMiddle(ctx,r.status.label,statusTextX,ry+18.5,83,12.6,r.status.color,'700','left',11.1);
     });
     const axisY=876;[0,25,50,75,100].forEach(v=>{const x=xBar+barW*v/100;text(ctx,`${v}%`,x,axisY,13.2,C.ink,'700','center');});
 
@@ -716,7 +725,7 @@
     finally{els.exportBtn.disabled=false;els.export4kBtn.disabled=false;button.innerHTML=oldHtml;}
   }
   function toast(msg){els.toast.textContent=msg;els.toast.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove('show'),1800);}
-  function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');els.dataInput.value=s.data||SAMPLE;els.dateOverride.value=s.date||'';}catch(_){els.dataInput.value=SAMPLE;}}
+  function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');els.dataInput.value=s.data||SAMPLE;els.dateOverride.value=s.date||'2026-11-17';}catch(_){els.dataInput.value=SAMPLE;}}
 
   els.parseBtn.addEventListener('click',()=>iconsReady.then(()=>run(true)));
   els.sampleBtn.addEventListener('click',()=>{els.dataInput.value=SAMPLE;els.dateOverride.value='';iconsReady.then(()=>run(true));});
